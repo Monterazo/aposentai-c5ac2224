@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Plus, Home, Search } from "lucide-react";
+import { Plus, Home, Search, LayoutDashboard } from "lucide-react";
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import { NewClientModal } from "@/components/dashboard/NewClientModal";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
@@ -20,6 +20,7 @@ import { Client } from "@/types/client";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [statusFilter, setStatusFilter] = useState<"all" | "new" | "analysis" | "pending" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const { showOnboarding, completeOnboarding, skipOnboarding } = useOnboarding();
@@ -30,14 +31,26 @@ const Dashboard = () => {
     navigate(`/client/${client.id}`);
   };
 
-  const breadcrumbItems = [
-    {
-      href: "/dashboard",
+  const getBreadcrumbTrail = () => {
+    const trail = [];
+    
+    // Always start with home
+    trail.push({
+      href: "/",
       label: "Início",
-      icon: Home,
+      icon: Home
+    });
+    
+    // Add current page
+    trail.push({
+      href: "/dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
       current: true
-    }
-  ];
+    });
+    
+    return trail;
+  };
 
   const filteredClients = clients.filter(client => {
     const matchesStatus = statusFilter === "all" || client.status === statusFilter;
@@ -55,7 +68,7 @@ const Dashboard = () => {
   const avgProgress = clients.length > 0 ? Math.round(clients.reduce((sum, c) => sum + (c.progress || 0), 0) / clients.length) : 0;
 
   return (
-    <AuthenticatedLayout breadcrumbItems={breadcrumbItems}>
+    <AuthenticatedLayout breadcrumbItems={getBreadcrumbTrail()}>
       {/* Onboarding Tour */}
       <OnboardingTour
         isVisible={showOnboarding}

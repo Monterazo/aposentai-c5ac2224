@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { sanitizeInput, isValidEmail } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import lawyerHero from "@/assets/lawyer-hero.jpg";
@@ -9,6 +10,7 @@ import lawyerHero from "@/assets/lawyer-hero.jpg";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -101,16 +103,31 @@ const Login = () => {
             </div>
             
             <div className="space-y-2">
-              <Input 
-                type="password" 
-                placeholder="Senha" 
-                value={password} 
-                onChange={e => setPassword(sanitizeInput(e.target.value))} 
-                onKeyPress={handleKeyPress} 
-                className="h-14"
-                maxLength={128}
-                autoComplete="current-password"
-              />
+              <div className="relative">
+                <Input 
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Senha" 
+                  value={password} 
+                  onChange={e => setPassword(sanitizeInput(e.target.value))} 
+                  onKeyPress={handleKeyPress} 
+                  className="h-14 pr-12"
+                  maxLength={128}
+                  autoComplete="current-password"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
 
             <Button 
