@@ -22,50 +22,56 @@ const VerifyCallback = () => {
         }
 
         if (type === 'recovery') {
-          // Para recuperação de senha, verifica o token e redireciona
-          const { data, error } = await supabase.auth.verifyOtp({
-            token_hash: token,
-            type: 'recovery'
-          });
+          // Para recuperação de senha, usa o exchangeCodeForSession
+          try {
+            const { data, error } = await supabase.auth.exchangeCodeForSession(token);
 
-          if (error) {
-            console.error('Recovery verification error:', error);
-            if (error.message.includes('expired') || error.message.includes('invalid')) {
-              toast.error("Link de recuperação expirado. Solicite um novo link.");
-              navigate('/auth/forgot-password');
-            } else {
-              toast.error("Erro ao verificar link de recuperação");
-              navigate('/auth/login');
+            if (error) {
+              console.error('Recovery verification error:', error);
+              if (error.message.includes('expired') || error.message.includes('invalid')) {
+                toast.error("Link de recuperação expirado. Solicite um novo link.");
+                navigate('/auth/forgot-password');
+              } else {
+                toast.error("Erro ao verificar link de recuperação");
+                navigate('/auth/login');
+              }
+              return;
             }
-            return;
-          }
 
-          if (data.session) {
-            toast.success("Link verificado! Redefina sua senha agora.");
-            // Passa os tokens pela URL para o reset-password
-            const params = new URLSearchParams({
-              access_token: data.session.access_token,
-              refresh_token: data.session.refresh_token,
-              type: 'recovery'
-            });
-            navigate(`/auth/reset-password?${params.toString()}`);
-          } else {
-            toast.error("Sessão não estabelecida");
+            if (data.session) {
+              toast.success("Link verificado! Redefina sua senha agora.");
+              // Passa os tokens pela URL para o reset-password
+              const params = new URLSearchParams({
+                access_token: data.session.access_token,
+                refresh_token: data.session.refresh_token,
+                type: 'recovery'
+              });
+              navigate(`/auth/reset-password?${params.toString()}`);
+            } else {
+              toast.error("Sessão não estabelecida");
+              navigate('/auth/forgot-password');
+            }
+          } catch (exchangeError) {
+            console.error('Exchange code error:', exchangeError);
+            toast.error("Link de recuperação inválido ou expirado. Solicite um novo link.");
             navigate('/auth/forgot-password');
           }
         } else if (type === 'signup') {
-          // Para confirmação de email
-          const { error } = await supabase.auth.verifyOtp({
-            token_hash: token,
-            type: 'signup'
-          });
+          // Para confirmação de email, usa exchangeCodeForSession também
+          try {
+            const { error } = await supabase.auth.exchangeCodeForSession(token);
 
-          if (error) {
-            toast.error("Erro ao confirmar email: " + error.message);
+            if (error) {
+              toast.error("Erro ao confirmar email: " + error.message);
+              navigate('/auth/login');
+            } else {
+              toast.success("Email confirmado com sucesso!");
+              navigate('/dashboard');
+            }
+          } catch (exchangeError) {
+            console.error('Exchange code error for signup:', exchangeError);
+            toast.error("Link de confirmação inválido ou expirado");
             navigate('/auth/login');
-          } else {
-            toast.success("Email confirmado com sucesso!");
-            navigate('/dashboard');
           }
         } else {
           toast.error("Tipo de verificação não suportado");
