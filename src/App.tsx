@@ -12,6 +12,9 @@ import ClientProfile from "./pages/ClientProfile";
 import Settings from "./pages/Settings";
 import Subscriptions from "./pages/Subscriptions";
 import EmailConfirmation from "./pages/EmailConfirmation";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
+          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+          <Route path="/auth/reset-password" element={<ResetPassword />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/email-confirmation" element={<EmailConfirmation />} />
           
           {/* Protected Routes */}

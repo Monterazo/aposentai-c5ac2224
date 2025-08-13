@@ -31,7 +31,7 @@ const Register = () => {
 
   // Additional validation for profile name
   const isValidProfileName = (name: string) => {
-    return name.length >= 2 && name.length <= 50 && /^[a-zA-ZÀ-ÿ\s]+$/.test(name);
+    return name.length >= 2 && name.length <= 50 && /^[a-zA-ZÀ-ÿ\s'-]+$/.test(name);
   };
 
   // Password validation

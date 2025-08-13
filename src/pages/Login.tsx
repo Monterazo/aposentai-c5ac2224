@@ -133,11 +133,18 @@ const Login = () => {
             </Button>
           </div>
 
-          <div className="text-center text-sm">
-            <span className="text-muted-foreground">Não tem uma conta? </span>
-            <button onClick={() => navigate("/auth/register")} className="text-primary font-medium hover:underline">
-              Registre-se
-            </button>
+          <div className="text-center text-sm space-y-2">
+            <div>
+              <button onClick={() => navigate("/auth/forgot-password")} className="text-primary font-medium hover:underline">
+                Esqueceu sua senha?
+              </button>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Não tem uma conta? </span>
+              <button onClick={() => navigate("/auth/register")} className="text-primary font-medium hover:underline">
+                Registre-se
+              </button>
+            </div>
           </div>
 
           <div className="text-center text-sm text-muted-foreground">

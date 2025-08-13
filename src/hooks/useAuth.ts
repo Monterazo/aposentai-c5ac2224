@@ -100,11 +100,11 @@ export const useAuth = () => {
     try {
       setLoading(true);
       
-      // Para desenvolvimento, não exigir confirmação de email
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             full_name: fullName,
             role: role
