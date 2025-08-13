@@ -25,10 +25,14 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { showOnboarding, completeOnboarding, skipOnboarding } = useOnboarding();
   const { isSearchVisible, closeSearch } = useGlobalSearch();
-  const { clients, loading } = useClients();
+  const { clients, loading, deleteClient } = useClients();
 
   const handleClientSelect = (client: Client) => {
     navigate(`/client/${client.id}`);
+  };
+
+  const handleDeleteClient = async (clientId: string) => {
+    await deleteClient(clientId);
   };
 
   const getBreadcrumbTrail = () => {
@@ -204,6 +208,7 @@ const Dashboard = () => {
                       key={client.id}
                       client={client}
                       onClick={handleClientSelect}
+                      onDelete={handleDeleteClient}
                     />
                   ))}
                 </div>

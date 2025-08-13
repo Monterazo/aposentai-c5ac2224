@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, FileText, Clock, CheckCircle, Users } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Search, Plus, FileText, Clock, CheckCircle, Users, Trash2 } from "lucide-react";
 import { NewClientModal } from "./NewClientModal";
 import { useClients } from "@/hooks/useClients";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +18,7 @@ const statusConfig = {
 
 export const ClientList = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const { clients, loading } = useClients();
+  const { clients, loading, deleteClient } = useClients();
   const navigate = useNavigate();
   
   const filteredClients = clients.filter(client =>
@@ -27,6 +28,10 @@ export const ClientList = () => {
 
   const handleClientClick = (clientId: string) => {
     navigate(`/client/${clientId}`);
+  };
+
+  const handleDeleteClient = async (clientId: string) => {
+    await deleteClient(clientId);
   };
 
   if (loading) {
@@ -92,10 +97,12 @@ export const ClientList = () => {
             return (
               <div 
                 key={client.id} 
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => handleClientClick(client.id)}
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
               >
-                <div className="flex items-center space-x-4">
+                <div 
+                  className="flex items-center space-x-4 flex-1 cursor-pointer"
+                  onClick={() => handleClientClick(client.id)}
+                >
                   <div className="flex-1">
                     <h3 className="font-medium text-foreground">{client.name}</h3>
                     <p className="text-sm text-muted-foreground">CPF: {client.cpf}</p>
@@ -117,6 +124,35 @@ export const ClientList = () => {
                     <StatusIcon className="w-3 h-3 mr-1" />
                     {statusConfig[client.status].label}
                   </Badge>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir o cliente "{client.name}"? Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteClient(client.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             );

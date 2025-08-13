@@ -116,6 +116,28 @@ export const useClients = () => {
     }
   };
 
+  const deleteClient = async (clientId: string) => {
+    if (!user) return { success: false, error: 'Usuário não autenticado' };
+
+    try {
+      const { error } = await supabase
+        .from('clientes')
+        .delete()
+        .eq('id', clientId)
+        .eq('user_id', user.id); // Garantir que só pode deletar próprios clientes
+
+      if (error) throw error;
+
+      toast.success('Cliente deletado com sucesso!');
+      fetchClients(); // Recarrega a lista
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error deleting client:', error);
+      toast.error('Erro ao deletar cliente');
+      return { success: false, error: error.message };
+    }
+  };
+
   useEffect(() => {
     fetchClients();
   }, [user]);
@@ -125,6 +147,7 @@ export const useClients = () => {
     loading,
     error,
     fetchClients,
-    createClient
+    createClient,
+    deleteClient
   };
 };
