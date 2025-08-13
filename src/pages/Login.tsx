@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { sanitizeInput, isValidEmail } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { AuthLayout } from "@/components/auth/AuthLayout";
 import lawyerHero from "@/assets/lawyer-hero.jpg";
 
 const Login = () => {
@@ -32,13 +31,15 @@ const Login = () => {
     
     const result = await signIn(email, password);
     
-    if (!result.success) {
+    if (result.success) {
+      // Manual redirect after successful login
+      navigate('/dashboard', { replace: true });
+    } else {
       setLoginAttempts(prev => prev + 1);
       if (loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS) {
         alert("Muitas tentativas de login falharam. Conta temporariamente bloqueada.");
       }
     }
-    // Remove navigation from here - let useAuth handle it
     
     setIsLoading(false);
   };
@@ -55,7 +56,6 @@ const Login = () => {
   };
 
   return (
-    <AuthLayout>
     <div className="min-h-screen bg-background flex">
       {/* Left Side - Hero Section */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
@@ -148,7 +148,6 @@ const Login = () => {
         </div>
       </div>
     </div>
-    </AuthLayout>
   );
 };
 

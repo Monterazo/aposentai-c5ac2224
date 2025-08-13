@@ -17,10 +17,6 @@ export const useAuth = () => {
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
   const fetchUserProfile = useCallback(async (userId: string) => {
-    // Prevent multiple simultaneous calls
-    if (isLoadingProfile) return;
-    setIsLoadingProfile(true);
-    
     try {
       console.log('Fetching profile for user:', userId);
       const { data: profile, error } = await supabase
@@ -31,6 +27,7 @@ export const useAuth = () => {
 
       if (error) {
         console.error('Error fetching profile:', error);
+        setLoading(false);
         return;
       }
 
@@ -48,19 +45,19 @@ export const useAuth = () => {
         console.log('No profile found for user');
         setUser(null);
       }
+      setLoading(false);
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
-    } finally {
-      setIsLoadingProfile(false);
+      setLoading(false);
     }
-  }, [isLoadingProfile]);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state change:', event, session?.user?.id);
         
         if (!mounted) return;
@@ -68,12 +65,16 @@ export const useAuth = () => {
         setSession(session);
         
         if (session?.user) {
-          // Directly fetch profile without setTimeout
-          await fetchUserProfile(session.user.id);
+          // Use setTimeout to prevent blocking the auth state change
+          setTimeout(() => {
+            if (mounted) {
+              fetchUserProfile(session.user.id);
+            }
+          }, 0);
         } else {
           setUser(null);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
@@ -93,7 +94,7 @@ export const useAuth = () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, []);
 
   const signUp = async (email: string, password: string, fullName: string, role: 'advogado' | 'usuario_comum' = 'usuario_comum') => {
     try {

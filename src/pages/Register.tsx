@@ -9,7 +9,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Check, X, Home, UserPlus } from "lucide-react";
 import { sanitizeInput, isValidEmail, isValidOAB } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { AuthLayout } from "@/components/auth/AuthLayout";
 import { toast } from "sonner";
 
 const Register = () => {
@@ -130,7 +129,6 @@ const Register = () => {
   );
 
   return (
-    <AuthLayout>
     <div className="min-h-screen bg-background">
       {/* Breadcrumbs */}
       <div className="max-w-7xl mx-auto px-6 py-4">
@@ -446,7 +444,6 @@ const Register = () => {
         </div>
       </div>
     </div>
-    </AuthLayout>
   );
 };
 
