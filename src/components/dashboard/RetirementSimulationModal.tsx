@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useClientProfile } from "@/hooks/useClientProfile";
 import {
   Dialog,
   DialogContent,
@@ -74,6 +76,8 @@ export const RetirementSimulationModal = ({
   onOpenChange,
   onSimulationComplete,
 }: RetirementSimulationModalProps) => {
+  const { clientId } = useParams();
+  const { saveSimulationData } = useClientProfile(clientId);
   const [isCalculating, setIsCalculating] = useState(false);
   const [contributionPercentage, setContributionPercentage] = useState([20]);
 
@@ -257,11 +261,32 @@ export const RetirementSimulationModal = ({
   const onSubmit = async (data: SimulationFormData) => {
     setIsCalculating(true);
     
-    // Simular cálculo (delay artificial para melhor UX)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // Salvar dados da simulação no perfil do cliente
+      const simulationDataToSave = {
+        dataNascimento: data.birthDate,
+        genero: data.gender,
+        dataInicioContribuicao: data.contributionStartDate,
+        salarioAtual: parseFloat(data.currentSalary.replace(/[^\d,]/g, '').replace(',', '.')),
+        trabalhoRural: data.isRural,
+        trabalhoEspecial: data.hasSpecialWork,
+        professor: data.hasTeachingWork,
+        anosTrabalhoEspecial: data.specialWorkYears ? parseInt(data.specialWorkYears) : 0,
+        anosTrabalhoRural: 0, // Não temos campo específico para anos rurais no formulário atual
+        anosMagisterio: data.teachingWorkYears ? parseInt(data.teachingWorkYears) : 0
+      };
+
+      await saveSimulationData(simulationDataToSave);
+      
+      // Simular cálculo (delay artificial para melhor UX)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const results = simulateRetirement(data);
+      onSimulationComplete(results);
+    } catch (error) {
+      console.error("Erro ao salvar dados da simulação:", error);
+    }
     
-    const results = simulateRetirement(data);
-    onSimulationComplete(results);
     setIsCalculating(false);
     onOpenChange(false);
   };

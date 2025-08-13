@@ -179,44 +179,77 @@ export type Database = {
       }
       clientes: {
         Row: {
+          anos_magisterio_simulacao: number | null
+          anos_trabalho_especial_simulacao: number | null
+          anos_trabalho_rural_simulacao: number | null
           cpf: string
           created_at: string
+          data_inicio_contribuicao_simulacao: string | null
           data_nascimento: string
+          data_nascimento_simulacao: string | null
           email: string | null
           endereco: string | null
           entidade_id: string | null
+          genero_simulacao: string | null
           id: string
           nome: string
+          professor_simulacao: boolean | null
           rg: string | null
+          salario_atual_simulacao: number | null
           telefone: string | null
+          trabalho_especial_simulacao: boolean | null
+          trabalho_rural_simulacao: boolean | null
+          ultima_simulacao_data: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          anos_magisterio_simulacao?: number | null
+          anos_trabalho_especial_simulacao?: number | null
+          anos_trabalho_rural_simulacao?: number | null
           cpf: string
           created_at?: string
+          data_inicio_contribuicao_simulacao?: string | null
           data_nascimento: string
+          data_nascimento_simulacao?: string | null
           email?: string | null
           endereco?: string | null
           entidade_id?: string | null
+          genero_simulacao?: string | null
           id?: string
           nome: string
+          professor_simulacao?: boolean | null
           rg?: string | null
+          salario_atual_simulacao?: number | null
           telefone?: string | null
+          trabalho_especial_simulacao?: boolean | null
+          trabalho_rural_simulacao?: boolean | null
+          ultima_simulacao_data?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          anos_magisterio_simulacao?: number | null
+          anos_trabalho_especial_simulacao?: number | null
+          anos_trabalho_rural_simulacao?: number | null
           cpf?: string
           created_at?: string
+          data_inicio_contribuicao_simulacao?: string | null
           data_nascimento?: string
+          data_nascimento_simulacao?: string | null
           email?: string | null
           endereco?: string | null
           entidade_id?: string | null
+          genero_simulacao?: string | null
           id?: string
           nome?: string
+          professor_simulacao?: boolean | null
           rg?: string | null
+          salario_atual_simulacao?: number | null
           telefone?: string | null
+          trabalho_especial_simulacao?: boolean | null
+          trabalho_rural_simulacao?: boolean | null
+          ultima_simulacao_data?: string | null
           updated_at?: string
           user_id?: string | null
         }

@@ -111,6 +111,50 @@ export const useClientProfile = (clientId: string | undefined) => {
     }
   };
 
+  const saveSimulationData = async (simulationData: {
+    dataNascimento: string;
+    genero: string;
+    dataInicioContribuicao: string;
+    salarioAtual: number;
+    trabalhoRural: boolean;
+    trabalhoEspecial: boolean;
+    professor: boolean;
+    anosTrabalhoEspecial?: number;
+    anosTrabalhoRural?: number;
+    anosMagisterio?: number;
+  }) => {
+    if (!clientId || !user) return { success: false, error: 'Dados inválidos' };
+
+    try {
+      const { error } = await supabase
+        .from('clientes')
+        .update({
+          data_nascimento_simulacao: simulationData.dataNascimento,
+          genero_simulacao: simulationData.genero,
+          data_inicio_contribuicao_simulacao: simulationData.dataInicioContribuicao,
+          salario_atual_simulacao: simulationData.salarioAtual,
+          trabalho_rural_simulacao: simulationData.trabalhoRural,
+          trabalho_especial_simulacao: simulationData.trabalhoEspecial,
+          professor_simulacao: simulationData.professor,
+          anos_trabalho_especial_simulacao: simulationData.anosTrabalhoEspecial || 0,
+          anos_trabalho_rural_simulacao: simulationData.anosTrabalhoRural || 0,
+          anos_magisterio_simulacao: simulationData.anosMagisterio || 0,
+          ultima_simulacao_data: new Date().toISOString()
+        })
+        .eq('id', clientId);
+
+      if (error) throw error;
+
+      toast.success('Dados da simulação salvos no perfil do cliente!');
+      fetchClientProfile(); // Recarrega os dados
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error saving simulation data:', error);
+      toast.error('Erro ao salvar dados da simulação');
+      return { success: false, error: error.message };
+    }
+  };
+
   useEffect(() => {
     fetchClientProfile();
   }, [clientId, user]);
@@ -120,6 +164,7 @@ export const useClientProfile = (clientId: string | undefined) => {
     loading,
     error,
     fetchClientProfile,
-    updateClient
+    updateClient,
+    saveSimulationData
   };
 };
