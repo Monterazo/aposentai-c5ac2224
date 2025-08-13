@@ -98,7 +98,8 @@ export const useClients = () => {
           endereco: clientData.endereco,
           rg: clientData.rg,
           data_nascimento: clientData.data_nascimento,
-          user_id: user.id
+          user_id: user.id,
+          entidade_id: null
         }])
         .select()
         .single();
