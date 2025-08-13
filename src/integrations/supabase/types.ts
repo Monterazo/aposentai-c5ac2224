@@ -336,27 +336,69 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          birth_date: string | null
+          cpf: string | null
           created_at: string
           email: string
           full_name: string
+          gender: string | null
           id: string
+          last_login: string | null
+          oab_number: string | null
+          oab_state: string | null
+          phone: string | null
+          preferences: Json | null
           role: Database["public"]["Enums"]["user_role"]
+          security_questions: Json | null
+          subscription_status: string | null
+          trial_end_date: string | null
+          trial_start_date: string | null
+          two_factor_enabled: boolean | null
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          cpf?: string | null
           created_at?: string
           email: string
           full_name: string
+          gender?: string | null
           id: string
+          last_login?: string | null
+          oab_number?: string | null
+          oab_state?: string | null
+          phone?: string | null
+          preferences?: Json | null
           role?: Database["public"]["Enums"]["user_role"]
+          security_questions?: Json | null
+          subscription_status?: string | null
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          two_factor_enabled?: boolean | null
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          cpf?: string | null
           created_at?: string
           email?: string
           full_name?: string
+          gender?: string | null
           id?: string
+          last_login?: string | null
+          oab_number?: string | null
+          oab_state?: string | null
+          phone?: string | null
+          preferences?: Json | null
           role?: Database["public"]["Enums"]["user_role"]
+          security_questions?: Json | null
+          subscription_status?: string | null
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          two_factor_enabled?: boolean | null
           updated_at?: string
         }
         Relationships: []
@@ -431,7 +473,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      validate_cpf: {
+        Args: { cpf_input: string }
+        Returns: boolean
+      }
+      validate_phone: {
+        Args: { phone_input: string }
+        Returns: boolean
+      }
     }
     Enums: {
       entity_type: "advogado_solo" | "escritorio"
