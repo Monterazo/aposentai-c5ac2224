@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff, Check, X, Home, UserPlus } from "lucide-react";
+import { Eye, EyeOff, Check, X, Home, UserPlus, ArrowLeft } from "lucide-react";
 import { sanitizeInput, isValidEmail, isValidOAB, isValidCPF, isValidPhone, isValidDate } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -447,11 +447,19 @@ const Register = () => {
             </div>
           )}
 
-          <div className="text-center text-sm">
-            <span className="text-muted-foreground">Já tem uma conta? </span>
-            <Link to="/auth/login" className="text-primary font-medium hover:underline">
-              Faça login
-            </Link>
+          <div className="text-center text-sm space-y-2">
+            <div>
+              <span className="text-muted-foreground">Já tem uma conta? </span>
+              <Link to="/auth/login" className="text-primary font-medium hover:underline">
+                Faça login
+              </Link>
+            </div>
+            <div className="pt-2">
+              <Link to="/" className="text-muted-foreground hover:text-primary inline-flex items-center text-sm">
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Voltar ao início
+              </Link>
+            </div>
           </div>
         </div>
       </div>
