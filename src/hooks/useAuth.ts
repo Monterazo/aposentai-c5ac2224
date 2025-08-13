@@ -54,7 +54,7 @@ export const useAuth = () => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle to avoid errors when no profile found
 
       if (error) {
         console.error('Error fetching profile:', error);
@@ -64,14 +64,17 @@ export const useAuth = () => {
 
       if (profile) {
         console.log('Profile found:', profile);
-        setUser({
+        const userProfile = {
           id: profile.id,
           email: profile.email,
           fullName: profile.full_name,
           role: profile.role
-        });
+        };
+        setUser(userProfile);
+        console.log('User state updated:', userProfile);
       } else {
         console.log('No profile found for user');
+        setUser(null);
       }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
