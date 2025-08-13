@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,23 +8,36 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Camera, Save, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { SubscriptionManagement } from "./SubscriptionManagement";
 
 export const Settings = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Mock user data - replace with actual user data later
+  // User data state initialized with real user data
   const [userData, setUserData] = useState({
-    name: "Dr. Maria Silva",
-    email: "maria.silva@escritorio.com",
+    name: user?.fullName || "",
+    email: user?.email || "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
     avatar: ""
   });
+
+  // Update userData when user context changes
+  useEffect(() => {
+    if (user) {
+      setUserData(prev => ({
+        ...prev,
+        name: user.fullName || "",
+        email: user.email || ""
+      }));
+    }
+  }, [user]);
 
   // Email notification preferences
   const [emailNotifications, setEmailNotifications] = useState({

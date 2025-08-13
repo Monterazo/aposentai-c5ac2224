@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Settings, LogOut, User, Mail, Lock, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProfileDropdownProps {
   onOpenSettings: () => void;
@@ -18,16 +19,13 @@ interface ProfileDropdownProps {
 
 export const ProfileDropdown = ({ onOpenSettings }: ProfileDropdownProps) => {
   const navigate = useNavigate();
-  
-  // Mock user data - replace with actual user data later
-  const user = {
-    name: "Dr. Maria Silva",
-    email: "maria.silva@escritorio.com",
-    avatar: ""
-  };
+  const { user, signOut } = useAuth();
 
-  const handleLogout = () => {
-    navigate("/login");
+  const handleLogout = async () => {
+    const result = await signOut();
+    if (result.success) {
+      navigate("/auth/login");
+    }
   };
 
   const getUserInitials = (name: string) => {
@@ -44,9 +42,9 @@ export const ProfileDropdown = ({ onOpenSettings }: ProfileDropdownProps) => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage src="" alt={user?.fullName || "Usuário"} />
             <AvatarFallback className="bg-primary text-primary-foreground">
-              {getUserInitials(user.name)}
+              {getUserInitials(user?.fullName || "U")}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -54,9 +52,9 @@ export const ProfileDropdown = ({ onOpenSettings }: ProfileDropdownProps) => {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-sm font-medium leading-none">{user?.fullName || "Usuário"}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
+              {user?.email || ""}
             </p>
           </div>
         </DropdownMenuLabel>
