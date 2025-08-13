@@ -8,10 +8,14 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Check, X, Home, UserPlus } from "lucide-react";
 import { sanitizeInput, isValidEmail, isValidOAB } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { AuthLayout } from "@/components/auth/AuthLayout";
+import { toast } from "sonner";
 
 const Register = () => {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     gender: "",
@@ -24,6 +28,7 @@ const Register = () => {
     password: ""
   });
   const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   // Additional validation for profile name
   const isValidProfileName = (name: string) => {
@@ -51,7 +56,7 @@ const Register = () => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent, canProceed: boolean) => {
-    if (e.key === 'Enter' && canProceed) {
+    if (e.key === 'Enter' && canProceed && !isLoading) {
       if (step < 4) {
         handleNext();
       } else {
@@ -60,9 +65,31 @@ const Register = () => {
     }
   };
 
-  const handleFinish = () => {
-    // Simular cadastro - redirecionar para confirmação de e-mail
-    navigate(`/email-confirmation?email=${encodeURIComponent(formData.email)}`);
+  const handleFinish = async () => {
+    if (!isPasswordValid) {
+      toast.error('Senha não atende aos critérios de segurança');
+      return;
+    }
+    
+    if (!isValidOAB(formData.oab) || !formData.uf) {
+      toast.error('Dados da OAB inválidos');
+      return;
+    }
+
+    setIsLoading(true);
+
+    const result = await signUp(
+      formData.email,
+      formData.password,
+      formData.profileName,
+      'advogado'
+    );
+
+    if (result.success) {
+      navigate(`/email-confirmation?email=${encodeURIComponent(formData.email)}`);
+    }
+
+    setIsLoading(false);
   };
 
   const renderStepIndicator = () => (
@@ -103,6 +130,7 @@ const Register = () => {
   );
 
   return (
+    <AuthLayout>
     <div className="min-h-screen bg-background">
       {/* Breadcrumbs */}
       <div className="max-w-7xl mx-auto px-6 py-4">
@@ -118,320 +146,307 @@ const Register = () => {
             <BreadcrumbItem>
               <BreadcrumbPage className="flex items-center">
                 <UserPlus className="w-4 h-4 mr-2" />
-                Cadastro
+                Registro
               </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </div>
 
-      <div className="flex items-center justify-center p-8">
-        <div className="w-full max-w-2xl">
+      <div className="max-w-md mx-auto px-6 py-12">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-foreground mb-2">AposentAI</h1>
-          <p className="text-sm text-muted-foreground">
-            Já tem uma conta? <Link to="/auth/login" className="text-primary hover:underline">Fazer login</Link>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Crie sua conta</h1>
+          <p className="text-muted-foreground">
+            Preencha os dados para começar a usar o AposentAI
           </p>
         </div>
 
         {renderStepIndicator()}
         {renderStepLabels()}
 
-        {step === 1 && (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-xl font-medium text-foreground mb-8">
-                Digite seu endereço de e-mail
-              </h2>
-            </div>
-            
-            <div className="max-w-md mx-auto space-y-2">
-              <Input
-                type="email"
-                placeholder="Digite seu e-mail"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: sanitizeInput(e.target.value)})}
-                onKeyPress={(e) => handleKeyPress(e, !!(formData.email && isValidEmail(formData.email)))}
-                className={formData.email && !isValidEmail(formData.email) ? "border-destructive" : ""}
-              />
-              {formData.email && !isValidEmail(formData.email) && (
-                <p className="text-xs text-destructive">Por favor, digite um e-mail válido</p>
-              )}
-            </div>
-
-            <div className="flex justify-center">
+        <div className="space-y-6">
+          {/* Step 1: Email */}
+          {step === 1 && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  type="email"
+                  placeholder="Digite seu e-mail"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: sanitizeInput(e.target.value)})}
+                  onKeyPress={(e) => handleKeyPress(e, formData.email && isValidEmail(formData.email))}
+                  className="h-14"
+                  maxLength={254}
+                />
+                {formData.email && !isValidEmail(formData.email) && (
+                  <p className="text-xs text-destructive">E-mail inválido</p>
+                )}
+              </div>
+              
               <Button 
                 onClick={handleNext}
                 variant={formData.email && isValidEmail(formData.email) ? "default" : "form"}
-                className="px-16"
+                size="full"
                 disabled={!formData.email || !isValidEmail(formData.email)}
               >
-                Próximo
+                Continuar
               </Button>
             </div>
-          </div>
-        )}
+          )}
 
-        {step === 2 && (
-          <div className="space-y-8 max-w-lg mx-auto">
-            <div className="space-y-6">
-              <div className="text-center mb-6">
-                <Label className="text-lg font-medium text-foreground">
-                  Forneça suas informações básicas
-                </Label>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <Label className="text-sm font-medium text-foreground mb-3 block">
-                    Qual é o seu gênero?
-                  </Label>
+          {/* Step 2: Basic Data */}
+          {step === 2 && (
+            <div className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Gênero</label>
                   <RadioGroup 
                     value={formData.gender} 
                     onValueChange={(value) => setFormData({...formData, gender: value})}
-                    className="flex flex-wrap gap-4 justify-center"
+                    className="grid grid-cols-2 gap-4"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="mulher" id="mulher" />
-                      <Label htmlFor="mulher" className="cursor-pointer">Mulher</Label>
+                      <RadioGroupItem value="M" id="male" />
+                      <Label htmlFor="male">Masculino</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="homem" id="homem" />
-                      <Label htmlFor="homem" className="cursor-pointer">Homem</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="nao-binario" id="nao-binario" />
-                      <Label htmlFor="nao-binario" className="cursor-pointer">Não binário</Label>
+                      <RadioGroupItem value="F" id="female" />
+                      <Label htmlFor="female">Feminino</Label>
                     </div>
                   </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-foreground">Nome do perfil</Label>
                   <Input
-                    placeholder="Digite o nome do seu perfil"
+                    type="text"
+                    placeholder="Nome completo"
                     value={formData.profileName}
                     onChange={(e) => setFormData({...formData, profileName: sanitizeInput(e.target.value)})}
+                    onKeyPress={(e) => handleKeyPress(e, !!(formData.gender && isValidProfileName(formData.profileName) && formData.birthDay && formData.birthMonth && formData.birthYear))}
+                    className="h-14"
+                    maxLength={50}
                   />
+                  {formData.profileName && !isValidProfileName(formData.profileName) && (
+                    <p className="text-xs text-destructive">Nome deve ter entre 2-50 caracteres e apenas letras</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-foreground">Data de nascimento</Label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <label className="text-sm font-medium text-foreground">Data de nascimento</label>
+                  <div className="grid grid-cols-3 gap-2">
                     <Select value={formData.birthDay} onValueChange={(value) => setFormData({...formData, birthDay: value})}>
-                      <SelectTrigger className="bg-input border-input-border text-foreground">
+                      <SelectTrigger>
                         <SelectValue placeholder="Dia" />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
-                        {Array.from({length: 31}, (_, i) => (
-                          <SelectItem key={i+1} value={String(i+1)} className="hover:bg-accent focus:bg-accent">
-                            {i+1}
+                      <SelectContent>
+                        {Array.from({length: 31}, (_, i) => i + 1).map(day => (
+                          <SelectItem key={day} value={day.toString().padStart(2, '0')}>
+                            {day.toString().padStart(2, '0')}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    
+
                     <Select value={formData.birthMonth} onValueChange={(value) => setFormData({...formData, birthMonth: value})}>
-                      <SelectTrigger className="bg-input border-input-border text-foreground">
+                      <SelectTrigger>
                         <SelectValue placeholder="Mês" />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
-                        {["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
-                          "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"].map((month, i) => (
-                          <SelectItem key={i+1} value={String(i+1)} className="hover:bg-accent focus:bg-accent">
-                            {month}
+                      <SelectContent>
+                        {[
+                          { value: '01', label: 'Jan' }, { value: '02', label: 'Fev' },
+                          { value: '03', label: 'Mar' }, { value: '04', label: 'Abr' },
+                          { value: '05', label: 'Mai' }, { value: '06', label: 'Jun' },
+                          { value: '07', label: 'Jul' }, { value: '08', label: 'Ago' },
+                          { value: '09', label: 'Set' }, { value: '10', label: 'Out' },
+                          { value: '11', label: 'Nov' }, { value: '12', label: 'Dez' }
+                        ].map(month => (
+                          <SelectItem key={month.value} value={month.value}>
+                            {month.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    
+
                     <Select value={formData.birthYear} onValueChange={(value) => setFormData({...formData, birthYear: value})}>
-                      <SelectTrigger className="bg-input border-input-border text-foreground">
+                      <SelectTrigger>
                         <SelectValue placeholder="Ano" />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover border-border max-h-60">
-                        {Array.from({length: 80}, (_, i) => {
-                          const year = new Date().getFullYear() - i;
-                          return (
-                            <SelectItem key={year} value={String(year)} className="hover:bg-accent focus:bg-accent">
-                              {year}
-                            </SelectItem>
-                          );
-                        })}
+                      <SelectContent>
+                        {Array.from({length: 80}, (_, i) => new Date().getFullYear() - 18 - i).map(year => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-
               </div>
-            </div>
 
-            <div className="flex justify-center">
               <Button 
                 onClick={handleNext}
-                variant={!formData.gender || !formData.profileName || !isValidProfileName(formData.profileName) || !formData.birthDay || !formData.birthMonth || !formData.birthYear ? "form" : "default"}
-                className="px-16"
-                disabled={!formData.gender || !formData.profileName || !isValidProfileName(formData.profileName) || !formData.birthDay || !formData.birthMonth || !formData.birthYear}
+                variant={formData.gender && isValidProfileName(formData.profileName) && formData.birthDay && formData.birthMonth && formData.birthYear ? "default" : "form"}
+                size="full"
+                disabled={!formData.gender || !isValidProfileName(formData.profileName) || !formData.birthDay || !formData.birthMonth || !formData.birthYear}
               >
-                Próximo
+                Continuar
               </Button>
             </div>
-          </div>
-        )}
+          )}
 
-        {step === 3 && (
-          <div className="space-y-8 max-w-lg mx-auto">
-            <div className="text-center mb-6">
-              <Label className="text-lg font-medium text-foreground">
-                Informações da OAB
-              </Label>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">Número da OAB</Label>
-                <Input
-                  placeholder="Ex: 123456"
-                  value={formData.oab}
-                  onChange={(e) => setFormData({...formData, oab: sanitizeInput(e.target.value)})}
-                  onKeyPress={(e) => handleKeyPress(e, !!(formData.oab && formData.uf))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">Estado (UF)</Label>
-                <Select value={formData.uf} onValueChange={(value) => setFormData({...formData, uf: value})}>
-                  <SelectTrigger className="bg-input border-input-border text-foreground">
-                    <SelectValue placeholder="UF" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border-border">
-                    {["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"].map(state => (
-                      <SelectItem key={state} value={state} className="hover:bg-accent focus:bg-accent">
-                        {state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex justify-center">
-              <Button 
-                onClick={handleNext}
-                variant={!formData.oab || !isValidOAB(formData.oab) || !formData.uf ? "form" : "default"}
-                className="px-16"
-                disabled={!formData.oab || !isValidOAB(formData.oab) || !formData.uf}
-              >
-                Próximo
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="space-y-6 max-w-md mx-auto">
-            <div className="text-center">
-              <h2 className="text-xl font-medium text-foreground mb-8">
-                Finalize o seu cadastro
-              </h2>
-            </div>
-
+          {/* Step 3: OAB */}
+          {step === 3 && (
             <div className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Input
+                    type="text"
+                    placeholder="Número da OAB (apenas números)"
+                    value={formData.oab}
+                    onChange={(e) => setFormData({...formData, oab: sanitizeInput(e.target.value.replace(/\D/g, ''))})}
+                    onKeyPress={(e) => handleKeyPress(e, !!(isValidOAB(formData.oab) && formData.uf))}
+                    className="h-14"
+                    maxLength={10}
+                  />
+                  {formData.oab && !isValidOAB(formData.oab) && (
+                    <p className="text-xs text-destructive">Número da OAB deve ter entre 4-6 dígitos</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Select value={formData.uf} onValueChange={(value) => setFormData({...formData, uf: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o estado da OAB" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[
+                        'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
+                        'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
+                        'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+                      ].map(state => (
+                        <SelectItem key={state} value={state}>
+                          {state}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleNext}
+                variant={isValidOAB(formData.oab) && formData.uf ? "default" : "form"}
+                size="full"
+                disabled={!isValidOAB(formData.oab) || !formData.uf}
+              >
+                Continuar
+              </Button>
+            </div>
+          )}
+
+          {/* Step 4: Password */}
+          {step === 4 && (
+            <div className="space-y-6">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">Senha</Label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Digite sua senha"
+                    placeholder="Crie uma senha segura"
                     value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    onChange={(e) => setFormData({...formData, password: sanitizeInput(e.target.value)})}
                     onKeyPress={(e) => handleKeyPress(e, isPasswordValid)}
+                    className="h-14 pr-12"
+                    maxLength={128}
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
               </div>
 
-              {formData.password && (
-                <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
-                  <p className="text-xs font-medium text-foreground mb-2">Sua senha deve conter:</p>
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      {passwordValidation.length ? (
-                        <Check size={12} className="text-green-600" />
-                      ) : (
-                        <X size={12} className="text-red-500" />
-                      )}
-                      <span className={`text-xs ${passwordValidation.length ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        Pelo menos 8 caracteres
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {passwordValidation.uppercase ? (
-                        <Check size={12} className="text-green-600" />
-                      ) : (
-                        <X size={12} className="text-red-500" />
-                      )}
-                      <span className={`text-xs ${passwordValidation.uppercase ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        Uma letra maiúscula
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {passwordValidation.lowercase ? (
-                        <Check size={12} className="text-green-600" />
-                      ) : (
-                        <X size={12} className="text-red-500" />
-                      )}
-                      <span className={`text-xs ${passwordValidation.lowercase ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        Uma letra minúscula
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {passwordValidation.number ? (
-                        <Check size={12} className="text-green-600" />
-                      ) : (
-                        <X size={12} className="text-red-500" />
-                      )}
-                      <span className={`text-xs ${passwordValidation.number ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        Um número
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {passwordValidation.special ? (
-                        <Check size={12} className="text-green-600" />
-                      ) : (
-                        <X size={12} className="text-red-500" />
-                      )}
-                      <span className={`text-xs ${passwordValidation.special ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        Um símbolo (!@#$%^&*)
-                      </span>
-                    </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">Sua senha deve conter:</p>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    {passwordValidation.length ? (
+                      <Check size={12} className="text-green-600" />
+                    ) : (
+                      <X size={12} className="text-red-500" />
+                    )}
+                    <span className={`text-xs ${passwordValidation.length ? 'text-green-600' : 'text-muted-foreground'}`}>
+                      Pelo menos 8 caracteres
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {passwordValidation.uppercase ? (
+                      <Check size={12} className="text-green-600" />
+                    ) : (
+                      <X size={12} className="text-red-500" />
+                    )}
+                    <span className={`text-xs ${passwordValidation.uppercase ? 'text-green-600' : 'text-muted-foreground'}`}>
+                      Uma letra maiúscula
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {passwordValidation.lowercase ? (
+                      <Check size={12} className="text-green-600" />
+                    ) : (
+                      <X size={12} className="text-red-500" />
+                    )}
+                    <span className={`text-xs ${passwordValidation.lowercase ? 'text-green-600' : 'text-muted-foreground'}`}>
+                      Uma letra minúscula
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {passwordValidation.number ? (
+                      <Check size={12} className="text-green-600" />
+                    ) : (
+                      <X size={12} className="text-red-500" />
+                    )}
+                    <span className={`text-xs ${passwordValidation.number ? 'text-green-600' : 'text-muted-foreground'}`}>
+                      Um número
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {passwordValidation.special ? (
+                      <Check size={12} className="text-green-600" />
+                    ) : (
+                      <X size={12} className="text-red-500" />
+                    )}
+                    <span className={`text-xs ${passwordValidation.special ? 'text-green-600' : 'text-muted-foreground'}`}>
+                      Um símbolo (!@#$%^&*)
+                    </span>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
 
-            <div className="flex justify-center">
-              <Button 
-                onClick={handleFinish}
-                variant={!isPasswordValid ? "form" : "default"}
-                className="px-16"
-                disabled={!isPasswordValid}
-              >
-                Concluir cadastro
-              </Button>
+              <div className="flex justify-center">
+                <Button 
+                  onClick={handleFinish}
+                  variant={!isPasswordValid ? "form" : "default"}
+                  className="px-16"
+                  disabled={!isPasswordValid || isLoading}
+                >
+                  {isLoading ? "Cadastrando..." : "Concluir cadastro"}
+                </Button>
+              </div>
             </div>
+          )}
+
+          <div className="text-center text-sm">
+            <span className="text-muted-foreground">Já tem uma conta? </span>
+            <Link to="/auth/login" className="text-primary font-medium hover:underline">
+              Faça login
+            </Link>
           </div>
-        )}
-
         </div>
       </div>
     </div>
+    </AuthLayout>
   );
 };
 

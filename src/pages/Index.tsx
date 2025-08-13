@@ -57,10 +57,10 @@ const Index = () => {
               </nav>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" onClick={() => navigate("/login")}>
+              <Button variant="outline" onClick={() => navigate("/auth/login")}>
                 Entrar
               </Button>
-              <Button onClick={() => navigate("/register")}>
+              <Button onClick={() => navigate("/auth/register")}>
                 Cadastre-se
               </Button>
             </div>
@@ -103,10 +103,10 @@ const Index = () => {
             </div>
 
             <div className="flex justify-center space-x-4">
-              <Button size="lg" variant="premium" onClick={() => navigate("/register")} className="text-lg px-8 py-4">
+              <Button size="lg" variant="premium" onClick={() => navigate("/auth/register")} className="text-lg px-8 py-4">
                 Começar Agora - Grátis
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate("/login")} className="text-lg px-8 py-4">
+              <Button size="lg" variant="outline" onClick={() => navigate("/auth/login")} className="text-lg px-8 py-4">
                 Fazer Login
               </Button>
             </div>

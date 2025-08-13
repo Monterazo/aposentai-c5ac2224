@@ -3,41 +3,49 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { sanitizeInput, isValidEmail } from "@/lib/utils";
-import heroImage from "/lovable-uploads/cc39dc68-cbb4-46b6-8759-90e1e777dd90.png";
-import lightningIcon from "@/assets/lightning-icon.png";
+import { useAuth } from "@/hooks/useAuth";
+import { AuthLayout } from "@/components/auth/AuthLayout";
 import lawyerHero from "@/assets/lawyer-hero.jpg";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginAttempts, setLoginAttempts] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const MAX_LOGIN_ATTEMPTS = 5;
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
       alert("Muitas tentativas de login. Tente novamente em alguns minutos.");
       return;
     }
 
-    // Sanitize inputs
-    const sanitizedEmail = sanitizeInput(email);
-    const sanitizedPassword = sanitizeInput(password);
+    if (!email || !password || !isValidEmail(email)) {
+      setLoginAttempts(prev => prev + 1);
+      return;
+    }
+
+    setIsLoading(true);
     
-    // Simular login - em produção, aqui haveria validação real
-    if (sanitizedEmail && sanitizedPassword && isValidEmail(sanitizedEmail)) {
-      navigate("/dashboard");
-    } else {
+    const result = await signIn(email, password);
+    
+    if (!result.success) {
       setLoginAttempts(prev => prev + 1);
       if (loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS) {
         alert("Muitas tentativas de login falharam. Conta temporariamente bloqueada.");
       }
+    } else {
+      navigate("/dashboard");
     }
+    
+    setIsLoading(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && email && password && isValidEmail(email)) {
+    if (e.key === 'Enter' && email && password && isValidEmail(email) && !isLoading) {
       handleLogin();
     }
   };
@@ -48,6 +56,7 @@ const Login = () => {
   };
 
   return (
+    <AuthLayout>
     <div className="min-h-screen bg-background flex">
       {/* Left Side - Hero Section */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
@@ -110,9 +119,9 @@ const Login = () => {
               variant={email && password && isValidEmail(email) ? "default" : "form"} 
               size="full" 
               className="mt-6" 
-              disabled={!email || !password || !isValidEmail(email) || loginAttempts >= MAX_LOGIN_ATTEMPTS}
+              disabled={!email || !password || !isValidEmail(email) || loginAttempts >= MAX_LOGIN_ATTEMPTS || isLoading}
             >
-              {loginAttempts >= MAX_LOGIN_ATTEMPTS ? "Conta Bloqueada" : "Entrar"}
+              {isLoading ? "Entrando..." : loginAttempts >= MAX_LOGIN_ATTEMPTS ? "Conta Bloqueada" : "Entrar"}
             </Button>
           </div>
 
@@ -140,6 +149,7 @@ const Login = () => {
         </div>
       </div>
     </div>
+    </AuthLayout>
   );
 };
 
