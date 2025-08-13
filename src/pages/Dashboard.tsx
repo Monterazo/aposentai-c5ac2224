@@ -36,7 +36,7 @@ const Dashboard = () => {
     
     // Always start with home
     trail.push({
-      href: "/",
+      href: "/dashboard",
       label: "Início",
       icon: Home
     });

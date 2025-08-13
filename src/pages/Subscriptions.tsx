@@ -15,7 +15,7 @@ const Subscriptions = () => {
 
   const getBreadcrumbTrail = () => [
     {
-      href: "/",
+      href: "/dashboard",
       label: "Início",
       icon: Home
     },

@@ -20,7 +20,7 @@ const ClientProfile = () => {
 
   const breadcrumbItems = [
     {
-      href: "/",
+      href: "/dashboard",
       label: "Início",
       icon: Home
     },
