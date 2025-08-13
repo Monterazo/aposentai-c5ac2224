@@ -46,22 +46,33 @@ const Index = () => {
       <DevSecurityWarning />
       {/* Header */}
       <header className="border-b border-border bg-card">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-foreground">AposentAI</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">AposentAI</h1>
               <nav className="hidden md:flex space-x-8">
                 <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Recursos</a>
                 <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Planos</a>
-                
               </nav>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" onClick={() => navigate("/auth/login")}>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden sm:flex items-center space-x-2 sm:space-x-4">
+              <Button variant="outline" size="sm" onClick={() => navigate("/auth/login")} className="text-sm">
                 Entrar
               </Button>
-              <Button onClick={() => navigate("/auth/register")}>
+              <Button size="sm" onClick={() => navigate("/auth/register")} className="text-sm">
                 Cadastre-se
+              </Button>
+            </div>
+
+            {/* Mobile Navigation */}
+            <div className="flex sm:hidden items-center space-x-2">
+              <Button variant="outline" size="sm" onClick={() => navigate("/auth/login")} className="text-xs px-3">
+                Entrar
+              </Button>
+              <Button size="sm" onClick={() => navigate("/auth/register")} className="text-xs px-3">
+                Cadastrar
               </Button>
             </div>
           </div>
@@ -72,14 +83,14 @@ const Index = () => {
       
 
       {/* Hero Section */}
-      <section className="py-24 px-6 bg-gradient-secondary">
+      <section className="py-12 sm:py-20 lg:py-24 px-4 sm:px-6 bg-gradient-secondary">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="max-w-4xl mx-auto mb-12 animate-fade-in">
-            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
+          <div className="max-w-4xl mx-auto mb-8 sm:mb-12 animate-fade-in">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 leading-tight">
               Transforme sua prática previdenciária com
               <span className="bg-gradient-primary bg-clip-text text-transparent"> Inteligência Artificial</span>
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+            <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 leading-relaxed px-4">
               Automatize análises, acelere cálculos e aumente sua taxa de sucesso com a plataforma mais avançada para advogados previdenciários do Brasil.
             </p>
             
@@ -102,11 +113,21 @@ const Index = () => {
               </Card>
             </div>
 
-            <div className="flex justify-center space-x-4">
-              <Button size="lg" variant="premium" onClick={() => navigate("/auth/register")} className="text-lg px-8 py-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
+              <Button 
+                size="lg" 
+                variant="premium" 
+                onClick={() => navigate("/auth/register")} 
+                className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4"
+              >
                 Começar Agora - Grátis
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate("/auth/login")} className="text-lg px-8 py-4">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                onClick={() => navigate("/auth/login")} 
+                className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4"
+              >
                 Fazer Login
               </Button>
             </div>
@@ -115,18 +136,18 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-6">
+      <section id="features" className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-4xl font-bold text-foreground mb-4">
+          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4">
               Recursos que fazem a diferença
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
               Tecnologia de ponta para advogados que buscam excelência e eficiência em casos previdenciários
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             {features.map((feature, index) => <Card key={index} className="p-8 text-center border-primary/10 hover:shadow-strong transition-all duration-300 hover:-translate-y-2 bg-gradient-secondary">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-full mb-6 shadow-medium">
                   <feature.icon className="w-8 h-8 text-primary-foreground" />
@@ -269,18 +290,18 @@ const Index = () => {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-6 bg-muted/30">
+      <section id="pricing" className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 bg-muted/30">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-foreground mb-4">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4">
               Planos que se adaptam ao seu escritório
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-lg sm:text-xl text-muted-foreground px-4">
               Escolha o plano ideal para o tamanho e necessidades do seu escritório
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             <Card className="p-8 border-border hover:shadow-lg transition-shadow">
               <div className="text-center">
                 <h3 className="text-2xl font-bold text-foreground mb-2">Starter</h3>

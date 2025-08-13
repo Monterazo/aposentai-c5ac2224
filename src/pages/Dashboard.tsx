@@ -86,7 +86,7 @@ const Dashboard = () => {
       <GlobalSearch isVisible={isSearchVisible} onClose={closeSearch} />
 
       {/* Main Dashboard Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Overview Cards */}
         <div data-tour="dashboard-stats">
           <DashboardStats
@@ -98,7 +98,7 @@ const Dashboard = () => {
         </div>
 
         {/* Clients Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Client List */}
           <div className="lg:col-span-3" data-tour="client-section">
             <Card className="p-6">
@@ -121,12 +121,13 @@ const Dashboard = () => {
               </div>
               
               {/* Controles de Filtros */}
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex space-x-2">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto overflow-x-auto">
                   <Button
                     variant={statusFilter === "all" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setStatusFilter("all")}
+                    className="whitespace-nowrap"
                   >
                     Todos
                   </Button>
@@ -134,6 +135,7 @@ const Dashboard = () => {
                     variant={statusFilter === "new" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setStatusFilter("new")}
+                    className="whitespace-nowrap"
                   >
                     Novos
                   </Button>
@@ -141,6 +143,7 @@ const Dashboard = () => {
                     variant={statusFilter === "analysis" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setStatusFilter("analysis")}
+                    className="whitespace-nowrap"
                   >
                     Em Análise
                   </Button>
@@ -148,6 +151,7 @@ const Dashboard = () => {
                     variant={statusFilter === "pending" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setStatusFilter("pending")}
+                    className="whitespace-nowrap"
                   >
                     Pendentes
                   </Button>
@@ -155,6 +159,7 @@ const Dashboard = () => {
                     variant={statusFilter === "completed" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setStatusFilter("completed")}
+                    className="whitespace-nowrap"
                   >
                     Concluídos
                   </Button>
