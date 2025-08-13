@@ -96,3 +96,55 @@ export function secureLocalStorage(key: string, value?: string): string | null {
     return null
   }
 }
+
+// Additional validation functions
+export const isValidCPF = (cpf: string): boolean => {
+  const cleanCPF = cpf.replace(/[^0-9]/g, '');
+  
+  if (cleanCPF.length !== 11) return false;
+  
+  // Verificar sequências inválidas
+  if (/^(\d)\1{10}$/.test(cleanCPF)) return false;
+  
+  // Calcular dígitos verificadores
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (10 - i);
+  }
+  let digit1 = 11 - (sum % 11);
+  if (digit1 > 9) digit1 = 0;
+  
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (11 - i);
+  }
+  let digit2 = 11 - (sum % 11);
+  if (digit2 > 9) digit2 = 0;
+  
+  return digit1 === parseInt(cleanCPF.charAt(9)) && digit2 === parseInt(cleanCPF.charAt(10));
+};
+
+export const isValidPhone = (phone: string): boolean => {
+  const cleanPhone = phone.replace(/[^0-9]/g, '');
+  
+  // Deve ter 10 ou 11 dígitos
+  if (cleanPhone.length < 10 || cleanPhone.length > 11) return false;
+  
+  // Verificar se começa com DDD válido (11-99)
+  const ddd = parseInt(cleanPhone.substring(0, 2));
+  if (ddd < 11 || ddd > 99) return false;
+  
+  // Para celular (11 dígitos), o terceiro dígito deve ser 9
+  if (cleanPhone.length === 11 && cleanPhone.charAt(2) !== '9') return false;
+  
+  return true;
+};
+
+export const isValidDate = (dateString: string): boolean => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const minAge = new Date();
+  minAge.setFullYear(now.getFullYear() - 18);
+  
+  return date instanceof Date && !isNaN(date.getTime()) && date <= minAge;
+};

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Check, X, Home, UserPlus } from "lucide-react";
-import { sanitizeInput, isValidEmail, isValidOAB } from "@/lib/utils";
+import { sanitizeInput, isValidEmail, isValidOAB, isValidCPF, isValidPhone, isValidDate } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -19,9 +19,9 @@ const Register = () => {
     email: "",
     gender: "",
     profileName: "",
-    birthDay: "",
-    birthMonth: "",
-    birthYear: "",
+    cpf: "",
+    phone: "",
+    birthDate: "",
     oab: "",
     uf: "",
     password: ""
@@ -29,9 +29,10 @@ const Register = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
 
-  // Additional validation for profile name
+  // Validação melhorada para nome completo
   const isValidProfileName = (name: string) => {
-    return name.length >= 2 && name.length <= 50 && /^[a-zA-ZÀ-ÿ\s'-]+$/.test(name);
+    const names = name.trim().split(' ').filter(n => n.length > 0);
+    return names.length >= 2 && name.length >= 4 && name.length <= 100 && /^[a-zA-ZÀ-ÿ\s'-]+$/.test(name);
   };
 
   // Password validation
@@ -65,6 +66,7 @@ const Register = () => {
   };
 
   const handleFinish = async () => {
+    // Validações completas antes do envio
     if (!isPasswordValid) {
       toast.error('Senha não atende aos critérios de segurança');
       return;
@@ -72,6 +74,21 @@ const Register = () => {
     
     if (!isValidOAB(formData.oab) || !formData.uf) {
       toast.error('Dados da OAB inválidos');
+      return;
+    }
+
+    if (!isValidCPF(formData.cpf)) {
+      toast.error('CPF inválido');
+      return;
+    }
+
+    if (!isValidPhone(formData.phone)) {
+      toast.error('Telefone inválido');
+      return;
+    }
+
+    if (!isValidDate(formData.birthDate)) {
+      toast.error('Data de nascimento inválida ou menor de 18 anos');
       return;
     }
 
@@ -167,15 +184,15 @@ const Register = () => {
           {step === 1 && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Input
-                  type="email"
-                  placeholder="Digite seu e-mail"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: sanitizeInput(e.target.value)})}
-                  onKeyPress={(e) => handleKeyPress(e, formData.email && isValidEmail(formData.email))}
-                  className="h-14"
-                  maxLength={254}
-                />
+                  <Input
+                    type="email"
+                    placeholder="Digite seu e-mail"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: sanitizeInput(e.target.value)})}
+                    onKeyPress={(e) => handleKeyPress(e, formData.email && isValidEmail(formData.email))}
+                    className="h-14"
+                    maxLength={254}
+                  />
                 {formData.email && !isValidEmail(formData.email) && (
                   <p className="text-xs text-destructive">E-mail inválido</p>
                 )}
@@ -196,96 +213,91 @@ const Register = () => {
           {step === 2 && (
             <div className="space-y-4">
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Gênero</label>
-                  <RadioGroup 
-                    value={formData.gender} 
-                    onValueChange={(value) => setFormData({...formData, gender: value})}
-                    className="grid grid-cols-2 gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="M" id="male" />
-                      <Label htmlFor="male">Masculino</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="F" id="female" />
-                      <Label htmlFor="female">Feminino</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                <div className="space-y-2">
-                  <Input
-                    type="text"
-                    placeholder="Nome completo"
-                    value={formData.profileName}
-                    onChange={(e) => setFormData({...formData, profileName: sanitizeInput(e.target.value)})}
-                    onKeyPress={(e) => handleKeyPress(e, !!(formData.gender && isValidProfileName(formData.profileName) && formData.birthDay && formData.birthMonth && formData.birthYear))}
-                    className="h-14"
-                    maxLength={50}
-                  />
-                  {formData.profileName && !isValidProfileName(formData.profileName) && (
-                    <p className="text-xs text-destructive">Nome deve ter entre 2-50 caracteres e apenas letras</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Data de nascimento</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Select value={formData.birthDay} onValueChange={(value) => setFormData({...formData, birthDay: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Dia" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({length: 31}, (_, i) => i + 1).map(day => (
-                          <SelectItem key={day} value={day.toString().padStart(2, '0')}>
-                            {day.toString().padStart(2, '0')}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select value={formData.birthMonth} onValueChange={(value) => setFormData({...formData, birthMonth: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Mês" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[
-                          { value: '01', label: 'Jan' }, { value: '02', label: 'Fev' },
-                          { value: '03', label: 'Mar' }, { value: '04', label: 'Abr' },
-                          { value: '05', label: 'Mai' }, { value: '06', label: 'Jun' },
-                          { value: '07', label: 'Jul' }, { value: '08', label: 'Ago' },
-                          { value: '09', label: 'Set' }, { value: '10', label: 'Out' },
-                          { value: '11', label: 'Nov' }, { value: '12', label: 'Dez' }
-                        ].map(month => (
-                          <SelectItem key={month.value} value={month.value}>
-                            {month.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select value={formData.birthYear} onValueChange={(value) => setFormData({...formData, birthYear: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Ano" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({length: 80}, (_, i) => new Date().getFullYear() - 18 - i).map(year => (
-                          <SelectItem key={year} value={year.toString()}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Gênero</label>
+                    <RadioGroup 
+                      value={formData.gender} 
+                      onValueChange={(value) => setFormData({...formData, gender: value})}
+                      className="grid grid-cols-3 gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="M" id="male" />
+                        <Label htmlFor="male">Masculino</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="F" id="female" />
+                        <Label htmlFor="female">Feminino</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="NB" id="nonbinary" />
+                        <Label htmlFor="nonbinary">Não-binário</Label>
+                      </div>
+                    </RadioGroup>
                   </div>
-                </div>
+
+                  <div className="space-y-2">
+                    <Input
+                      type="text"
+                      placeholder="Nome completo (ex: Maria Silva Santos)"
+                      value={formData.profileName}
+                      onChange={(e) => setFormData({...formData, profileName: sanitizeInput(e.target.value)})}
+                      onKeyPress={(e) => handleKeyPress(e, !!(formData.gender && isValidProfileName(formData.profileName) && formData.cpf && formData.phone && formData.birthDate))}
+                      className="h-14"
+                      maxLength={100}
+                    />
+                    {formData.profileName && !isValidProfileName(formData.profileName) && (
+                      <p className="text-xs text-destructive">Nome deve ter pelo menos 2 palavras e entre 4-100 caracteres</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Input
+                      type="text"
+                      placeholder="CPF (000.000.000-00)"
+                      value={formData.cpf}
+                      onChange={(e) => setFormData({...formData, cpf: sanitizeInput(e.target.value)})}
+                      className="h-14"
+                      maxLength={14}
+                    />
+                    {formData.cpf && !isValidCPF(formData.cpf) && (
+                      <p className="text-xs text-destructive">CPF inválido</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Input
+                      type="tel"
+                      placeholder="Telefone (11) 99999-9999"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: sanitizeInput(e.target.value)})}
+                      className="h-14"
+                      maxLength={15}
+                    />
+                    {formData.phone && !isValidPhone(formData.phone) && (
+                      <p className="text-xs text-destructive">Telefone inválido</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Data de nascimento</label>
+                    <Input
+                      type="date"
+                      value={formData.birthDate}
+                      onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
+                      className="h-14"
+                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                    />
+                    {formData.birthDate && !isValidDate(formData.birthDate) && (
+                      <p className="text-xs text-destructive">Data inválida ou menor de 18 anos</p>
+                    )}
+                  </div>
               </div>
 
               <Button 
                 onClick={handleNext}
-                variant={formData.gender && isValidProfileName(formData.profileName) && formData.birthDay && formData.birthMonth && formData.birthYear ? "default" : "form"}
+                variant={formData.gender && isValidProfileName(formData.profileName) && isValidCPF(formData.cpf) && isValidPhone(formData.phone) && isValidDate(formData.birthDate) ? "default" : "form"}
                 size="full"
-                disabled={!formData.gender || !isValidProfileName(formData.profileName) || !formData.birthDay || !formData.birthMonth || !formData.birthYear}
+                disabled={!formData.gender || !isValidProfileName(formData.profileName) || !isValidCPF(formData.cpf) || !isValidPhone(formData.phone) || !isValidDate(formData.birthDate)}
               >
                 Continuar
               </Button>
