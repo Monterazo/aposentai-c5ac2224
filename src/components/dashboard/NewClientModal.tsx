@@ -127,8 +127,11 @@ export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps
                 <Input
                   id="phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="(11) 99999-9999"
+                  onChange={(e) => {
+                    const numbersOnly = e.target.value.replace(/\D/g, '');
+                    setFormData(prev => ({ ...prev, phone: numbersOnly }));
+                  }}
+                  placeholder="11999999999"
                   className="mt-1"
                 />
               </div>
@@ -137,8 +140,11 @@ export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps
                 <Input
                   id="cpf"
                   value={formData.cpf}
-                  onChange={(e) => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
-                  placeholder="000.000.000-00"
+                  onChange={(e) => {
+                    const numbersOnly = e.target.value.replace(/\D/g, '');
+                    setFormData(prev => ({ ...prev, cpf: numbersOnly }));
+                  }}
+                  placeholder="00000000000"
                   className="mt-1"
                 />
               </div>
