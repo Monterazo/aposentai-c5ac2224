@@ -12,6 +12,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
 
   useEffect(() => {
     console.log('AuthLayout - user:', user, 'loading:', loading);
+    // Only redirect if loading is complete and user exists
     if (!loading && user) {
       console.log('AuthLayout redirecting to dashboard');
       navigate('/dashboard', { replace: true });

@@ -13,7 +13,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Only redirect if we're certain there's no user and not loading
+    // Only redirect if loading is complete and no user
     if (!loading && !user) {
       console.log('ProtectedRoute redirecting to login');
       navigate('/auth/login', { replace: true });
