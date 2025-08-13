@@ -184,7 +184,7 @@ export type Database = {
           data_nascimento: string
           email: string | null
           endereco: string | null
-          entidade_id: string
+          entidade_id: string | null
           id: string
           nome: string
           rg: string | null
@@ -198,7 +198,7 @@ export type Database = {
           data_nascimento: string
           email?: string | null
           endereco?: string | null
-          entidade_id: string
+          entidade_id?: string | null
           id?: string
           nome: string
           rg?: string | null
@@ -212,7 +212,7 @@ export type Database = {
           data_nascimento?: string
           email?: string | null
           endereco?: string | null
-          entidade_id?: string
+          entidade_id?: string | null
           id?: string
           nome?: string
           rg?: string | null

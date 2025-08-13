@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Copy, Download, CheckCircle } from "lucide-react";
+import { AlertCircle, Copy, Download, CheckCircle, Loader2 } from "lucide-react";
+import { useClientProfile } from "@/hooks/useClientProfile";
+import { toast } from "sonner";
 
 interface FormField {
   id: string;
@@ -32,8 +35,31 @@ const mockFormFields: FormField[] = [
 ];
 
 export const INSSForms = () => {
-  const [formFields, setFormFields] = useState<FormField[]>(mockFormFields);
+  const { clientId } = useParams();
+  const { client, loading } = useClientProfile(clientId);
+  const [formFields, setFormFields] = useState<FormField[]>([]);
   const [isValidated, setIsValidated] = useState(false);
+
+  // Inicializar campos do formulário com dados do cliente
+  useEffect(() => {
+    if (client) {
+      const fields: FormField[] = [
+        { id: "nome", label: "Nome Completo", value: client.name || "", required: true, filled: !!client.name },
+        { id: "cpf", label: "CPF", value: client.cpf || "", required: true, filled: !!client.cpf },
+        { id: "rg", label: "RG", value: client.rg || "", required: true, filled: !!client.rg },
+        { id: "dataNascimento", label: "Data de Nascimento", value: client.data_nascimento || "", required: true, filled: !!client.data_nascimento },
+        { id: "endereco", label: "Endereço", value: client.endereco || "", required: true, filled: !!client.endereco },
+        { id: "telefone", label: "Telefone", value: client.phone || "", required: false, filled: !!client.phone },
+        { id: "email", label: "E-mail", value: client.email || "", required: false, filled: !!client.email },
+        { id: "estadoCivil", label: "Estado Civil", value: "", required: true, filled: false },
+        { id: "profissao", label: "Profissão", value: "", required: true, filled: false },
+        { id: "tipoRequerimento", label: "Tipo de Requerimento", value: "Aposentadoria por Idade", required: true, filled: true },
+        { id: "dataRequerimento", label: "Data do Requerimento", value: "", required: true, filled: false },
+        { id: "observacoes", label: "Observações", value: "", required: false, filled: false }
+      ];
+      setFormFields(fields);
+    }
+  }, [client]);
 
   const requiredFieldsCount = formFields.filter(field => field.required).length;
   const filledRequiredCount = formFields.filter(field => field.required && field.filled).length;
@@ -63,14 +89,40 @@ export const INSSForms = () => {
     console.log("Exporting form data...");
   };
 
-  const handleCopyToClipboard = () => {
+  const handleCopyToClipboard = async () => {
     const formData = formFields
       .filter(field => field.filled)
       .map(field => `${field.label}: ${field.value}`)
       .join('\n');
     
-    navigator.clipboard.writeText(formData);
+    try {
+      await navigator.clipboard.writeText(formData);
+      toast.success('Dados copiados para a área de transferência!');
+    } catch (error) {
+      toast.error('Erro ao copiar dados');
+    }
   };
+
+  if (loading) {
+    return (
+      <Card className="p-6 border-input-border">
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <span>Carregando dados do cliente...</span>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!client) {
+    return (
+      <Card className="p-6 border-input-border">
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Cliente não encontrado</p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6 border-input-border">

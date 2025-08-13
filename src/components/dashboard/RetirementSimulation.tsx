@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calculator, Download, TrendingUp, Clock, DollarSign } from "lucide-react";
+import { Calculator, Download, TrendingUp, Clock, DollarSign, Loader2 } from "lucide-react";
+import { useRetirementTypes } from "@/hooks/useRetirementTypes";
+import { useDocuments } from "@/hooks/useDocuments";
 
 interface SimulationRule {
   id: string;
@@ -93,10 +96,126 @@ const mockSimulations: SimulationRule[] = [
 ];
 
 export const RetirementSimulation = () => {
-  const [simulations] = useState<SimulationRule[]>(mockSimulations);
-  const [selectedRule, setSelectedRule] = useState<string>(simulations[0].id);
+  const { clientId } = useParams();
+  const { retirementTypes, requirements, loading: typesLoading, getRequirementsForType } = useRetirementTypes();
+  const { documents, loading: docsLoading } = useDocuments(clientId);
+  
+  const loading = typesLoading || docsLoading;
 
+  // Gerar simulações baseadas nos dados reais
+  const generateSimulations = (): SimulationRule[] => {
+    if (!retirementTypes.length || !requirements.length) return [];
+
+    return retirementTypes.map(type => {
+      const typeRequirements = getRequirementsForType(type.id);
+      const requiredDocs = typeRequirements.filter(req => req.obrigatorio);
+      const uploadedDocs = requiredDocs.filter(req => 
+        documents.some(doc => doc.tipo_documento === req.nome_documento)
+      );
+      
+      const progress = requiredDocs.length > 0 
+        ? Math.round((uploadedDocs.length / requiredDocs.length) * 100) 
+        : 0;
+
+      // Calcular tempo estimado baseado no progresso e tipo
+      const getTimeRemaining = () => {
+        if (progress === 0) return "Documentos insuficientes";
+        
+        const baseMonths = {
+          'Aposentadoria por Idade': 24,
+          'Aposentadoria por Tempo de Contribuição': 36,
+          'Aposentadoria Especial': 18,
+          'Aposentadoria da Pessoa com Deficiência': 30,
+          'Aposentadoria Rural': 12
+        };
+        
+        const months = baseMonths[type.nome as keyof typeof baseMonths] || 24;
+        const adjustedMonths = Math.max(3, Math.round(months * (100 - progress) / 100));
+        const years = Math.floor(adjustedMonths / 12);
+        const remainingMonths = adjustedMonths % 12;
+        
+        if (years > 0) {
+          return `${years} ano${years > 1 ? 's' : ''} e ${remainingMonths} mês${remainingMonths !== 1 ? 'es' : ''}`;
+        }
+        return `${remainingMonths} mês${remainingMonths !== 1 ? 'es' : ''}`;
+      };
+
+      // Calcular data estimada
+      const getEstimatedDate = () => {
+        if (progress === 0) return "Verificar documentos";
+        
+        const timeStr = getTimeRemaining();
+        const monthsMatch = timeStr.match(/(\d+)\s+mês/);
+        const yearsMatch = timeStr.match(/(\d+)\s+ano/);
+        
+        const months = (yearsMatch ? parseInt(yearsMatch[1]) * 12 : 0) + 
+                     (monthsMatch ? parseInt(monthsMatch[1]) : 0);
+        
+        const futureDate = new Date();
+        futureDate.setMonth(futureDate.getMonth() + months);
+        
+        return futureDate.toLocaleDateString('pt-BR', { 
+          month: 'short', 
+          year: 'numeric' 
+        });
+      };
+
+      // Calcular valor estimado
+      const getEstimatedValue = () => {
+        const baseValues = {
+          'Aposentadoria por Idade': 3247.50,
+          'Aposentadoria por Tempo de Contribuição': 4120.80,
+          'Aposentadoria Especial': 5200.00,
+          'Aposentadoria da Pessoa com Deficiência': 4500.00,
+          'Aposentadoria Rural': 2890.00
+        };
+        
+        const baseValue = baseValues[type.nome as keyof typeof baseValues] || 3247.50;
+        return baseValue.toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        });
+      };
+
+      return {
+        id: type.id,
+        name: type.nome,
+        description: type.requisitos_gerais,
+        timeRemaining: getTimeRemaining(),
+        estimatedDate: getEstimatedDate(),
+        estimatedValue: getEstimatedValue(),
+        progress,
+        isRecommended: progress >= 80 // Marca como recomendada se >= 80%
+      };
+    }).sort((a, b) => b.progress - a.progress);
+  };
+
+  const simulations = generateSimulations();
+  const [selectedRule, setSelectedRule] = useState<string>(simulations[0]?.id || '');
   const recommendedRule = simulations.find(rule => rule.isRecommended);
+
+  if (loading) {
+    return (
+      <Card className="p-6 border-input-border">
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <span>Carregando simulações...</span>
+        </div>
+      </Card>
+    );
+  }
+
+  if (simulations.length === 0) {
+    return (
+      <Card className="p-6 border-input-border">
+        <div className="text-center py-8">
+          <p className="text-muted-foreground mb-4">
+            Nenhuma simulação disponível. Cadastre tipos de aposentadoria primeiro.
+          </p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6 border-input-border">
@@ -104,7 +223,7 @@ export const RetirementSimulation = () => {
         <h2 className="text-xl font-semibold text-foreground">Simulação de Aposentadoria</h2>
         <Button variant="outline" size="sm">
           <Calculator className="w-4 h-4 mr-2" />
-          Nova Simulação
+          Atualizar Simulação
         </Button>
       </div>
 

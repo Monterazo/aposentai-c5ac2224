@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +12,13 @@ import {
   Clock, 
   FileText,
   Download,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from "lucide-react";
+import { useRetirementTypes } from "@/hooks/useRetirementTypes";
+import { useDocuments } from "@/hooks/useDocuments";
+import { useAnalyses } from "@/hooks/useAnalyses";
+import { toast } from "sonner";
 
 interface RecommendationRule {
   id: string;
@@ -104,19 +110,160 @@ const administrativeSteps = [
 ];
 
 export const ProfileAnalysis = () => {
+  const { clientId } = useParams();
   const [activeTab, setActiveTab] = useState("recommendation");
+  const [isCreatingAnalysis, setIsCreatingAnalysis] = useState(false);
   
-  const recommendedRule = mockRecommendations.find(rule => rule.isRecommended);
-  const alternativeRules = mockRecommendations.filter(rule => !rule.isRecommended);
+  const { retirementTypes, requirements, loading: typesLoading, getRequirementsForType } = useRetirementTypes();
+  const { documents, loading: docsLoading } = useDocuments(clientId);
+  const { analyses, loading: analysesLoading, createAnalysis, getLatestAnalysis } = useAnalyses(clientId);
+
+  const latestAnalysis = getLatestAnalysis();
+  const loading = typesLoading || docsLoading || analysesLoading;
+
+  // Calcular análise automática baseada nos documentos
+  const calculateAnalysis = () => {
+    if (!retirementTypes.length || !requirements.length) return [];
+
+    return retirementTypes.map(type => {
+      const typeRequirements = getRequirementsForType(type.id);
+      const requiredDocs = typeRequirements.filter(req => req.obrigatorio);
+      const uploadedDocs = requiredDocs.filter(req => 
+        documents.some(doc => doc.tipo_documento === req.nome_documento)
+      );
+      
+      const completionPercentage = requiredDocs.length > 0 
+        ? Math.round((uploadedDocs.length / requiredDocs.length) * 100) 
+        : 0;
+
+      const missingDocs = requiredDocs.filter(req => 
+        !documents.some(doc => doc.tipo_documento === req.nome_documento)
+      );
+
+      // Simular cálculo de tempo e valor estimado baseado no tipo
+      const timeToRetirement = getEstimatedTime(type.nome, completionPercentage);
+      const estimatedValue = getEstimatedValue(type.nome, completionPercentage);
+
+      return {
+        id: type.id,
+        name: type.nome,
+        description: type.descricao,
+        advantage: type.requisitos_gerais,
+        timeToRetirement,
+        estimatedValue,
+        requirements: typeRequirements.map(r => r.nome_documento),
+        missingDocuments: missingDocs.map(d => d.nome_documento),
+        completionPercentage,
+        isRecommended: completionPercentage >= 80 // Marca como recomendada se >= 80%
+      };
+    }).sort((a, b) => b.completionPercentage - a.completionPercentage);
+  };
+
+  const getEstimatedTime = (typeName: string, completion: number) => {
+    const baseMonths = {
+      'Aposentadoria por Idade': 24,
+      'Aposentadoria por Tempo de Contribuição': 36,
+      'Aposentadoria Especial': 18,
+      'Aposentadoria da Pessoa com Deficiência': 30,
+      'Aposentadoria Rural': 12
+    };
+    
+    const months = baseMonths[typeName as keyof typeof baseMonths] || 24;
+    const adjustedMonths = Math.max(6, Math.round(months * (100 - completion) / 100));
+    const years = Math.floor(adjustedMonths / 12);
+    const remainingMonths = adjustedMonths % 12;
+    
+    if (years > 0) {
+      return `${years} ano${years > 1 ? 's' : ''} e ${remainingMonths} mese${remainingMonths !== 1 ? 's' : ''}`;
+    }
+    return `${remainingMonths} mese${remainingMonths !== 1 ? 's' : ''}`;
+  };
+
+  const getEstimatedValue = (typeName: string, completion: number) => {
+    const baseValues = {
+      'Aposentadoria por Idade': 3247.50,
+      'Aposentadoria por Tempo de Contribuição': 4120.80,
+      'Aposentadoria Especial': 5200.00,
+      'Aposentadoria da Pessoa com Deficiência': 4500.00,
+      'Aposentadoria Rural': 2890.00
+    };
+    
+    const baseValue = baseValues[typeName as keyof typeof baseValues] || 3247.50;
+    const adjustedValue = baseValue * (completion / 100);
+    
+    return adjustedValue.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+  };
+
+  const handleCreateAnalysis = async () => {
+    if (!clientId) return;
+
+    const analysisRules = calculateAnalysis();
+    const recommendedRule = analysisRules.find(rule => rule.isRecommended);
+    
+    if (!recommendedRule) {
+      toast.error('Não foi possível gerar análise. Verifique se há documentos suficientes.');
+      return;
+    }
+
+    setIsCreatingAnalysis(true);
+    
+    const result = await createAnalysis({
+      cliente_id: clientId,
+      tipo_aposentadoria_id: recommendedRule.id,
+      resultado_analise: `Recomendação: ${recommendedRule.name}. Completude: ${recommendedRule.completionPercentage}%`,
+      observacoes: `Documentos pendentes: ${recommendedRule.missingDocuments.join(', ')}`,
+      percentual_completude: recommendedRule.completionPercentage
+    });
+
+    setIsCreatingAnalysis(false);
+    
+    if (result.success) {
+      toast.success('Análise gerada com sucesso!');
+    }
+  };
+
+  const analysisRules = calculateAnalysis();
+  const recommendedRule = analysisRules.find(rule => rule.isRecommended);
+  const alternativeRules = analysisRules.filter(rule => !rule.isRecommended);
+
+  if (loading) {
+    return (
+      <Card className="p-6 border-input-border">
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <span>Carregando análise...</span>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6 border-input-border">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-foreground">Análise de Perfil e Recomendação</h2>
-        <Button variant="outline" size="sm">
-          <Download className="w-4 h-4 mr-2" />
-          Relatório Completo
-        </Button>
+        <div className="flex space-x-2">
+          {!latestAnalysis && (
+            <Button 
+              onClick={handleCreateAnalysis}
+              disabled={isCreatingAnalysis}
+              size="sm"
+            >
+              {isCreatingAnalysis ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <TrendingUp className="w-4 h-4 mr-2" />
+              )}
+              Gerar Análise
+            </Button>
+          )}
+          <Button variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Relatório Completo
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -223,28 +370,61 @@ export const ProfileAnalysis = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-foreground">Checklist de Pendências</h3>
-              <Badge variant="outline">85% Completo</Badge>
+              <Badge variant="outline">
+                {recommendedRule ? `${recommendedRule.completionPercentage}% Completo` : 'Sem análise'}
+              </Badge>
             </div>
             
-            {recommendedRule && (
+            {recommendedRule ? (
               <div className="space-y-3">
                 <h4 className="font-medium text-foreground">Requisitos - {recommendedRule.name}</h4>
-                {recommendedRule.requirements.map((req, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 border border-input-border rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <span className="text-foreground">{req}</span>
-                    <Badge className="bg-green-100 text-green-800 ml-auto">Completo</Badge>
-                  </div>
-                ))}
+                {recommendedRule.requirements.map((req, index) => {
+                  const hasDocument = documents.some(doc => doc.tipo_documento === req);
+                  return (
+                    <div key={index} className="flex items-center space-x-3 p-3 border border-input-border rounded-lg">
+                      {hasDocument ? (
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      ) : (
+                        <AlertTriangle className="w-5 h-5 text-amber-500" />
+                      )}
+                      <span className="text-foreground">{req}</span>
+                      <Badge className={`ml-auto ${
+                        hasDocument 
+                          ? "bg-green-100 text-green-800" 
+                          : "bg-amber-100 text-amber-800"
+                      }`}>
+                        {hasDocument ? "Completo" : "Pendente"}
+                      </Badge>
+                    </div>
+                  );
+                })}
                 
-                <h4 className="font-medium text-foreground mt-6">Documentos Pendentes</h4>
-                {recommendedRule.missingDocuments.map((doc, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 border border-input-border rounded-lg">
-                    <AlertTriangle className="w-5 h-5 text-amber-500" />
-                    <span className="text-foreground">{doc}</span>
-                    <Badge className="bg-amber-100 text-amber-800 ml-auto">Pendente</Badge>
-                  </div>
-                ))}
+                {recommendedRule.missingDocuments.length > 0 && (
+                  <>
+                    <h4 className="font-medium text-foreground mt-6">Documentos Pendentes</h4>
+                    {recommendedRule.missingDocuments.map((doc, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-3 border border-input-border rounded-lg">
+                        <AlertTriangle className="w-5 h-5 text-amber-500" />
+                        <span className="text-foreground">{doc}</span>
+                        <Badge className="bg-amber-100 text-amber-800 ml-auto">Pendente</Badge>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  Nenhuma análise disponível. Gere uma análise primeiro.
+                </p>
+                <Button onClick={handleCreateAnalysis} disabled={isCreatingAnalysis}>
+                  {isCreatingAnalysis ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                  )}
+                  Gerar Análise
+                </Button>
               </div>
             )}
           </div>

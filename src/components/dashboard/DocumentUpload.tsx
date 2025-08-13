@@ -1,9 +1,13 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, FileText, Download, Eye, Trash2, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, FileText, Download, Eye, Trash2, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { useRetirementTypes } from "@/hooks/useRetirementTypes";
+import { useDocuments } from "@/hooks/useDocuments";
+import { toast } from "sonner";
 
 interface Document {
   id: string;
@@ -105,9 +109,14 @@ const getDocumentColor = (type: string, required: boolean): string => {
 };
 
 export const DocumentUpload = () => {
-  const [documents] = useState<Document[]>(mockDocuments);
+  const { clientId } = useParams();
+  const { retirementTypes, requirements, loading: typesLoading } = useRetirementTypes();
+  const { documents, loading: docsLoading, uploadDocument } = useDocuments(clientId);
   const [dragActive, setDragActive] = useState(false);
   const [activeStage, setActiveStage] = useState("stage1");
+  const [uploading, setUploading] = useState(false);
+  
+  const loading = typesLoading || docsLoading;
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -123,21 +132,45 @@ export const DocumentUpload = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    // Handle file upload logic here
+    
+    const files = Array.from(e.dataTransfer.files);
+    handleFileUpload(files);
+  };
+
+  const handleFileUpload = async (files: File[]) => {
+    if (!clientId || files.length === 0) return;
+
+    setUploading(true);
+    
+    for (const file of files) {
+      // Simular upload - em produção, integraria com Supabase Storage
+      const success = await uploadDocument({
+        nome_arquivo: file.name,
+        tipo_documento: file.name.toLowerCase().includes('rg') ? 'RG e CPF' : 'Documento Geral',
+        cliente_id: clientId,
+        observacoes: `Arquivo de ${(file.size / 1024 / 1024).toFixed(2)} MB`
+      });
+
+      if (!success.success) {
+        toast.error(`Erro ao enviar ${file.name}`);
+      }
+    }
+    
+    setUploading(false);
   };
 
   const getStageProgress = (stageKey: string) => {
     const stage = documentStages[stageKey as keyof typeof documentStages];
     const requiredDocs = stage.documents.filter(doc => doc.required);
     const uploadedRequired = requiredDocs.filter(doc => 
-      documents.some(uploaded => uploaded.type === doc.type)
+      documents.some(uploaded => uploaded.tipo_documento === doc.type)
     );
     return requiredDocs.length > 0 ? (uploadedRequired.length / requiredDocs.length) * 100 : 100;
   };
 
   const renderStageContent = (stageKey: string) => {
     const stage = documentStages[stageKey as keyof typeof documentStages];
-    const stageDocuments = documents.filter(doc => getDocumentStage(doc.type) === stageKey);
+    const stageDocuments = documents.filter(doc => getDocumentStage(doc.tipo_documento) === stageKey);
     
     return (
       <div className="space-y-4">
@@ -160,7 +193,27 @@ export const DocumentUpload = () => {
           <p className="text-sm text-muted-foreground mb-3">
             {stage.description}
           </p>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.multiple = true;
+              input.accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png';
+              input.onchange = (e) => {
+                const files = Array.from((e.target as HTMLInputElement).files || []);
+                handleFileUpload(files);
+              };
+              input.click();
+            }}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4 mr-2" />
+            )}
             Selecionar Arquivos
           </Button>
         </div>
@@ -169,7 +222,7 @@ export const DocumentUpload = () => {
         <div className="space-y-3">
           <h4 className="font-medium text-foreground">Documentos desta etapa:</h4>
           {stage.documents.map((docType) => {
-            const uploaded = documents.find(doc => doc.type === docType.type);
+            const uploaded = documents.find(doc => doc.tipo_documento === docType.type);
             return (
               <div key={docType.type} className="flex items-center justify-between p-3 border border-input-border rounded-lg">
                 <div className="flex items-center space-x-3">
@@ -185,13 +238,19 @@ export const DocumentUpload = () => {
                       {docType.label} {docType.required && <span className="text-red-500">*</span>}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {uploaded ? `Enviado: ${uploaded.name}` : docType.required ? "Obrigatório" : "Opcional"}
+                      {uploaded ? `Enviado: ${uploaded.nome_arquivo}` : docType.required ? "Obrigatório" : "Opcional"}
                     </p>
                   </div>
                 </div>
                 {uploaded && (
-                  <Badge className={getDocumentColor(uploaded.type, uploaded.required)}>
-                    {uploaded.processed ? "Processado" : "Enviado"}
+                  <Badge className={uploaded.status_validacao === 'aprovado' 
+                    ? "bg-green-100 text-green-800" 
+                    : uploaded.status_validacao === 'rejeitado'
+                      ? "bg-red-100 text-red-800" 
+                      : "bg-yellow-100 text-yellow-800"
+                  }>
+                    {uploaded.status_validacao === 'aprovado' ? "Aprovado" : 
+                     uploaded.status_validacao === 'rejeitado' ? "Rejeitado" : "Pendente"}
                   </Badge>
                 )}
               </div>
@@ -215,24 +274,29 @@ export const DocumentUpload = () => {
                 <div className="flex items-center space-x-3">
                   <FileText className="w-6 h-6 text-muted-foreground" />
                   <div>
-                    <p className="font-medium text-foreground">{doc.name}</p>
+                    <p className="font-medium text-foreground">{doc.nome_arquivo}</p>
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <span>{doc.size}</span>
+                      <span>{doc.tipo_documento}</span>
                       <span>•</span>
-                      <span>{doc.uploadDate}</span>
+                      <span>{new Date(doc.created_at).toLocaleDateString('pt-BR')}</span>
                     </div>
+                    {doc.observacoes && (
+                      <p className="text-sm text-muted-foreground mt-1">{doc.observacoes}</p>
+                    )}
                   </div>
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  <Badge className={getDocumentColor(doc.type, doc.required)}>
-                    {getDocumentLabel(doc.type)}
+                  <Badge className={
+                    doc.status_validacao === 'aprovado' 
+                      ? "bg-green-100 text-green-800" 
+                      : doc.status_validacao === 'rejeitado'
+                        ? "bg-red-100 text-red-800" 
+                        : "bg-yellow-100 text-yellow-800"
+                  }>
+                    {doc.status_validacao === 'aprovado' ? "Aprovado" : 
+                     doc.status_validacao === 'rejeitado' ? "Rejeitado" : "Pendente"}
                   </Badge>
-                  {doc.processed && (
-                    <Badge className="bg-green-500/10 text-green-600">
-                      Processado
-                    </Badge>
-                  )}
                   <div className="flex space-x-1">
                     <Button variant="ghost" size="sm">
                       <Eye className="w-4 h-4" />
@@ -250,14 +314,33 @@ export const DocumentUpload = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <Card className="p-6 border-input-border">
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <span>Carregando documentos...</span>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-6 border-input-border">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-foreground">Upload de Documentos</h2>
-        <Button variant="outline" size="sm">
-          <Download className="w-4 h-4 mr-2" />
-          Exportar Todos
-        </Button>
+        <div className="flex space-x-2">
+          {uploading && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Enviando...
+            </div>
+          )}
+          <Button variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Exportar Todos
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeStage} onValueChange={setActiveStage} className="w-full">
