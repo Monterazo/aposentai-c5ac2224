@@ -37,9 +37,8 @@ const Login = () => {
       if (loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS) {
         alert("Muitas tentativas de login falharam. Conta temporariamente bloqueada.");
       }
-    } else {
-      navigate("/dashboard");
     }
+    // Remove navigation from here - let useAuth handle it
     
     setIsLoading(false);
   };

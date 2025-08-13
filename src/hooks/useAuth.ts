@@ -19,6 +19,7 @@ export const useAuth = () => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
         
         if (session?.user) {
@@ -48,6 +49,7 @@ export const useAuth = () => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -61,12 +63,15 @@ export const useAuth = () => {
       }
 
       if (profile) {
+        console.log('Profile found:', profile);
         setUser({
           id: profile.id,
           email: profile.email,
           fullName: profile.full_name,
           role: profile.role
         });
+      } else {
+        console.log('No profile found for user');
       }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
@@ -134,11 +139,22 @@ export const useAuth = () => {
 
         if (profileError || !profile) {
           // User exists in auth but not in our system
+          console.log('User not found in profiles table:', profileError);
           await supabase.auth.signOut();
           toast.error('Usuário não autorizado. Entre em contato com o administrador.');
           return { success: false, error: 'Usuário não autorizado' };
         }
 
+        console.log('Login successful, profile found:', profile);
+        
+        // Manually set user to trigger immediate redirect
+        setUser({
+          id: profile.id,
+          email: profile.email,
+          fullName: profile.full_name,
+          role: profile.role
+        });
+        
         toast.success('Login realizado com sucesso!');
         return { success: true };
       }
