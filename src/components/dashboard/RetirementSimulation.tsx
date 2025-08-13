@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { Calculator, Download, TrendingUp, Clock, DollarSign, Loader2 } from "lucide-react";
 import { useRetirementTypes } from "@/hooks/useRetirementTypes";
 import { useDocuments } from "@/hooks/useDocuments";
+import { RetirementSimulationModal } from "./RetirementSimulationModal";
+import { SimulationResults } from "./SimulationResults";
 
 interface SimulationRule {
   id: string;
@@ -17,6 +19,22 @@ interface SimulationRule {
   estimatedValue: string;
   progress: number;
   isRecommended?: boolean;
+}
+
+interface RetirementResult {
+  type: string;
+  description: string;
+  requiredAge: number;
+  requiredContribution: number;
+  currentAge: number;
+  currentContribution: number;
+  yearsUntilRetirement: number;
+  monthsUntilRetirement: number;
+  estimatedValue: number;
+  canRetireNow: boolean;
+  rule: string;
+  minimumPoints?: number;
+  currentPoints?: number;
 }
 
 const mockSimulations: SimulationRule[] = [
@@ -99,6 +117,8 @@ export const RetirementSimulation = () => {
   const { clientId } = useParams();
   const { retirementTypes, requirements, loading: typesLoading, getRequirementsForType } = useRetirementTypes();
   const { documents, loading: docsLoading } = useDocuments(clientId);
+  const [showModal, setShowModal] = useState(false);
+  const [simulationResults, setSimulationResults] = useState<RetirementResult[] | null>(null);
   
   const loading = typesLoading || docsLoading;
 
@@ -194,6 +214,20 @@ export const RetirementSimulation = () => {
   const [selectedRule, setSelectedRule] = useState<string>(simulations[0]?.id || '');
   const recommendedRule = simulations.find(rule => rule.isRecommended);
 
+  const handleSimulationComplete = (results: RetirementResult[]) => {
+    setSimulationResults(results);
+  };
+
+  const handleNewSimulation = () => {
+    setSimulationResults(null);
+    setShowModal(true);
+  };
+
+  // Se temos resultados de simulação, mostra os resultados
+  if (simulationResults) {
+    return <SimulationResults results={simulationResults} onNewSimulation={handleNewSimulation} />;
+  }
+
   if (loading) {
     return (
       <Card className="p-6 border-input-border">
@@ -221,9 +255,13 @@ export const RetirementSimulation = () => {
     <Card className="p-6 border-input-border">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-foreground">Simulação de Aposentadoria</h2>
-        <Button variant="outline" size="sm">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setShowModal(true)}
+        >
           <Calculator className="w-4 h-4 mr-2" />
-          Atualizar Simulação
+          Nova Simulação
         </Button>
       </div>
 
@@ -326,6 +364,12 @@ export const RetirementSimulation = () => {
           </Card>
         ))}
       </div>
+
+      <RetirementSimulationModal 
+        open={showModal}
+        onOpenChange={setShowModal}
+        onSimulationComplete={handleSimulationComplete}
+      />
     </Card>
   );
 };
