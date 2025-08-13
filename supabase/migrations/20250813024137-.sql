@@ -1,0 +1,3 @@
+-- Verificar se precisa desabilitar confirmação de email
+-- Para desenvolvimento, podemos desabilitar
+-- Em produção, você deve configurar templates de email no Supabase

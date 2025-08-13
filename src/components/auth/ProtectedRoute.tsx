@@ -14,13 +14,15 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/auth/login');
+      console.log('ProtectedRoute redirecting to login');
+      navigate('/auth/login', { replace: true });
     }
   }, [user, loading, navigate]);
 
   useEffect(() => {
     if (user && requiredRole && user.role !== requiredRole && user.role !== 'admin') {
-      navigate('/dashboard');
+      console.log('ProtectedRoute redirecting due to insufficient role');
+      navigate('/dashboard', { replace: true });
     }
   }, [user, requiredRole, navigate]);
 

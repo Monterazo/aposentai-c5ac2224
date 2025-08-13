@@ -82,13 +82,11 @@ export const useAuth = () => {
     try {
       setLoading(true);
       
-      const redirectUrl = `${window.location.origin}/`;
-      
+      // Para desenvolvimento, não exigir confirmação de email
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
             role: role
@@ -102,7 +100,7 @@ export const useAuth = () => {
       }
 
       if (data.user) {
-        toast.success('Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.');
+        toast.success('Cadastro realizado com sucesso! Você já pode fazer login.');
         return { success: true };
       }
 

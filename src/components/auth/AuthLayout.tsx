@@ -14,7 +14,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
     console.log('AuthLayout - user:', user, 'loading:', loading);
     if (!loading && user) {
       console.log('AuthLayout redirecting to dashboard');
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     }
   }, [user, loading, navigate]);
 
