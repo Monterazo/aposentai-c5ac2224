@@ -14,7 +14,415 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alertas: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          documento_id: string | null
+          id: string
+          lido: boolean
+          mensagem: string
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          documento_id?: string | null
+          id?: string
+          lido?: boolean
+          mensagem: string
+          tipo?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          documento_id?: string | null
+          id?: string
+          lido?: boolean
+          mensagem?: string
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alertas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analises: {
+        Row: {
+          analista_id: string
+          cliente_id: string
+          created_at: string
+          id: string
+          observacoes: string | null
+          percentual_completude: number | null
+          resultado_analise: string | null
+          tipo_aposentadoria_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          analista_id: string
+          cliente_id: string
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          percentual_completude?: number | null
+          resultado_analise?: string | null
+          tipo_aposentadoria_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          analista_id?: string
+          cliente_id?: string
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          percentual_completude?: number | null
+          resultado_analise?: string | null
+          tipo_aposentadoria_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analises_analista_id_fkey"
+            columns: ["analista_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analises_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analises_tipo_aposentadoria_id_fkey"
+            columns: ["tipo_aposentadoria_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_aposentadoria"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assinaturas: {
+        Row: {
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          entidade_id: string
+          id: string
+          plano: string
+          status: string
+          stripe_subscription_id: string | null
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          entidade_id: string
+          id?: string
+          plano: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          entidade_id?: string
+          id?: string
+          plano?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assinaturas_entidade_id_fkey"
+            columns: ["entidade_id"]
+            isOneToOne: false
+            referencedRelation: "entidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clientes: {
+        Row: {
+          cpf: string
+          created_at: string
+          data_nascimento: string
+          email: string | null
+          endereco: string | null
+          entidade_id: string
+          id: string
+          nome: string
+          rg: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cpf: string
+          created_at?: string
+          data_nascimento: string
+          email?: string | null
+          endereco?: string | null
+          entidade_id: string
+          id?: string
+          nome: string
+          rg?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cpf?: string
+          created_at?: string
+          data_nascimento?: string
+          email?: string | null
+          endereco?: string | null
+          entidade_id?: string
+          id?: string
+          nome?: string
+          rg?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_entidade_id_fkey"
+            columns: ["entidade_id"]
+            isOneToOne: false
+            referencedRelation: "entidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos: {
+        Row: {
+          caminho_arquivo: string | null
+          cliente_id: string
+          created_at: string
+          id: string
+          nome_arquivo: string
+          observacoes: string | null
+          status_validacao: Database["public"]["Enums"]["validation_status"]
+          tipo_documento: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          caminho_arquivo?: string | null
+          cliente_id: string
+          created_at?: string
+          id?: string
+          nome_arquivo: string
+          observacoes?: string | null
+          status_validacao?: Database["public"]["Enums"]["validation_status"]
+          tipo_documento: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          caminho_arquivo?: string | null
+          cliente_id?: string
+          created_at?: string
+          id?: string
+          nome_arquivo?: string
+          observacoes?: string | null
+          status_validacao?: Database["public"]["Enums"]["validation_status"]
+          tipo_documento?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entidades: {
+        Row: {
+          cnpj: string | null
+          created_at: string
+          email: string
+          endereco: string | null
+          id: string
+          nome_fantasia: string
+          oab_numero: string | null
+          owner_id: string
+          telefone: string | null
+          tipo: Database["public"]["Enums"]["entity_type"]
+          updated_at: string
+        }
+        Insert: {
+          cnpj?: string | null
+          created_at?: string
+          email: string
+          endereco?: string | null
+          id?: string
+          nome_fantasia: string
+          oab_numero?: string | null
+          owner_id: string
+          telefone?: string | null
+          tipo: Database["public"]["Enums"]["entity_type"]
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string | null
+          created_at?: string
+          email?: string
+          endereco?: string | null
+          id?: string
+          nome_fantasia?: string
+          oab_numero?: string | null
+          owner_id?: string
+          telefone?: string | null
+          tipo?: Database["public"]["Enums"]["entity_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entidades_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      requisitos_documentos: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          nome_documento: string
+          obrigatorio: boolean
+          tipo_aposentadoria_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome_documento: string
+          obrigatorio?: boolean
+          tipo_aposentadoria_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome_documento?: string
+          obrigatorio?: boolean
+          tipo_aposentadoria_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisitos_documentos_tipo_aposentadoria_id_fkey"
+            columns: ["tipo_aposentadoria_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_aposentadoria"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tipos_aposentadoria: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          requisitos_gerais: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          requisitos_gerais?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          requisitos_gerais?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +431,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      entity_type: "advogado_solo" | "escritorio"
+      user_role: "admin" | "advogado" | "usuario_comum"
+      validation_status: "pendente" | "aprovado" | "rejeitado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +560,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      entity_type: ["advogado_solo", "escritorio"],
+      user_role: ["admin", "advogado", "usuario_comum"],
+      validation_status: ["pendente", "aprovado", "rejeitado"],
+    },
   },
 } as const
