@@ -240,7 +240,7 @@ const Register = () => {
                       type="text"
                       placeholder="Nome completo (ex: Maria Silva Santos)"
                       value={formData.profileName}
-                      onChange={(e) => setFormData({...formData, profileName: sanitizeInput(e.target.value)})}
+                      onChange={(e) => setFormData({...formData, profileName: e.target.value})}
                       onKeyPress={(e) => handleKeyPress(e, !!(formData.gender && isValidProfileName(formData.profileName) && formData.cpf && formData.phone && formData.birthDate))}
                       className="h-14"
                       maxLength={100}
