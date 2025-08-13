@@ -3,17 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, CheckCircle, FileText } from "lucide-react";
 import { validateCPF } from "@/lib/utils";
-
-interface Client {
-  id: string;
-  name: string;
-  cpf: string;
-  status: "analysis" | "pending" | "completed";
-  lastUpdate: string;
-  documentsCount: number;
-  progress: number;
-  priority: "high" | "medium" | "low";
-}
+import { Client } from "@/types/client";
 
 interface ClientCardProps {
   client: Client;
@@ -21,6 +11,7 @@ interface ClientCardProps {
 }
 
 const statusConfig = {
+  new: { label: "Novo", color: "bg-gray-100 text-gray-800", icon: FileText },
   analysis: { label: "Em Análise", color: "bg-yellow-100 text-yellow-800", icon: Clock },
   pending: { label: "Pendente", color: "bg-blue-100 text-blue-800", icon: FileText },
   completed: { label: "Concluído", color: "bg-green-100 text-green-800", icon: CheckCircle }
@@ -33,8 +24,8 @@ const priorityConfig = {
 };
 
 export const ClientCard = ({ client, onClick }: ClientCardProps) => {
-  const status = statusConfig[client.status];
-  const priority = priorityConfig[client.priority];
+  const status = statusConfig[client.status || 'new'];
+  const priority = priorityConfig[client.priority || 'medium'];
   const StatusIcon = status.icon;
   
   return (
@@ -76,14 +67,14 @@ export const ClientCard = ({ client, onClick }: ClientCardProps) => {
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Progresso</span>
-          <span className="text-foreground">{client.progress}%</span>
+          <span className="text-foreground">{client.progress || 0}%</span>
         </div>
-        <Progress value={client.progress} className="h-2" />
+        <Progress value={client.progress || 0} className="h-2" />
       </div>
       
       <div className="flex justify-between items-center mt-3 text-sm text-muted-foreground">
-        <span>{client.documentsCount} documentos</span>
-        <span>Atualizado em {client.lastUpdate}</span>
+        <span>{client.documentsCount || 0} documentos</span>
+        <span>Atualizado em {client.lastUpdate || client.updated_at?.split('T')[0] || 'N/A'}</span>
       </div>
     </div>
   );

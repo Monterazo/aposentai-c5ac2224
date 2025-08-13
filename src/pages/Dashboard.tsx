@@ -8,7 +8,6 @@ import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import { NewClientModal } from "@/components/dashboard/NewClientModal";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { DashboardSummary } from "@/components/dashboard/DashboardSummary";
-import { ClientFilters } from "@/components/dashboard/ClientFilters";
 import { ClientCard } from "@/components/dashboard/ClientCard";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { HelpWidget } from "@/components/help/HelpWidget";
@@ -16,68 +15,16 @@ import { KeyboardShortcuts } from "@/components/ui/keyboard-shortcuts";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
-
-interface Client {
-  id: string;
-  name: string;
-  cpf: string;
-  status: "analysis" | "pending" | "completed";
-  lastUpdate: string;
-  documentsCount: number;
-  progress: number;
-  priority: "high" | "medium" | "low";
-}
-
-const mockClients: Client[] = [
-  {
-    id: "1",
-    name: "Maria Silva Santos",
-    cpf: "111.444.777-35",
-    status: "analysis",
-    lastUpdate: "2024-01-15",
-    documentsCount: 8,
-    progress: 65,
-    priority: "high"
-  },
-  {
-    id: "2", 
-    name: "João Pereira Costa",
-    cpf: "123.456.789-09",
-    status: "pending",
-    lastUpdate: "2024-01-14",
-    documentsCount: 12,
-    progress: 35,
-    priority: "medium"
-  },
-  {
-    id: "3",
-    name: "Ana Carolina Oliveira",
-    cpf: "987.654.321-00", 
-    status: "completed",
-    lastUpdate: "2024-01-13",
-    documentsCount: 15,
-    progress: 100,
-    priority: "low"
-  },
-  {
-    id: "4",
-    name: "Pedro Santos Lima",
-    cpf: "456.789.123-45",
-    status: "analysis",
-    lastUpdate: "2024-01-12",
-    documentsCount: 6,
-    progress: 25,
-    priority: "high"
-  }
-];
-
+import { useClients } from "@/hooks/useClients";
+import { Client } from "@/types/client";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<"all" | "analysis" | "pending" | "completed">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "new" | "analysis" | "pending" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const { showOnboarding, completeOnboarding, skipOnboarding } = useOnboarding();
   const { isSearchVisible, closeSearch } = useGlobalSearch();
+  const { clients, loading } = useClients();
 
   const handleClientSelect = (client: Client) => {
     navigate(`/client/${client.id}`);
@@ -92,21 +39,20 @@ const Dashboard = () => {
     }
   ];
 
-  const filteredClients = mockClients
-    .filter(client => {
-      const matchesStatus = statusFilter === "all" || client.status === statusFilter;
-      const matchesSearch = searchQuery === "" || 
-        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.cpf.replace(/[.-]/g, '').includes(searchQuery.replace(/[.-]/g, ''));
-      return matchesStatus && matchesSearch;
-    });
+  const filteredClients = clients.filter(client => {
+    const matchesStatus = statusFilter === "all" || client.status === statusFilter;
+    const matchesSearch = searchQuery === "" || 
+      client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.cpf.replace(/[.-]/g, '').includes(searchQuery.replace(/[.-]/g, ''));
+    return matchesStatus && matchesSearch;
+  });
 
-  const completedClients = mockClients.filter(c => c.status === "completed").length;
-  const activeClients = mockClients.filter(c => c.status !== "completed").length;
-  const analysisClients = mockClients.filter(c => c.status === "analysis").length;
-  const pendingClients = mockClients.filter(c => c.status === "pending").length;
-  const totalDocuments = mockClients.reduce((sum, c) => sum + c.documentsCount, 0);
-  const avgProgress = Math.round(mockClients.reduce((sum, c) => sum + c.progress, 0) / mockClients.length);
+  const completedClients = clients.filter(c => c.status === "completed").length;
+  const activeClients = clients.filter(c => c.status !== "completed").length;
+  const analysisClients = clients.filter(c => c.status === "analysis").length;
+  const pendingClients = clients.filter(c => c.status === "pending").length;
+  const totalDocuments = clients.reduce((sum, c) => sum + (c.documentsCount || 0), 0);
+  const avgProgress = clients.length > 0 ? Math.round(clients.reduce((sum, c) => sum + (c.progress || 0), 0) / clients.length) : 0;
 
   return (
     <AuthenticatedLayout breadcrumbItems={breadcrumbItems}>
@@ -172,6 +118,13 @@ const Dashboard = () => {
                     Todos
                   </Button>
                   <Button
+                    variant={statusFilter === "new" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setStatusFilter("new")}
+                  >
+                    Novos
+                  </Button>
+                  <Button
                     variant={statusFilter === "analysis" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setStatusFilter("analysis")}
@@ -205,15 +158,38 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {filteredClients.map((client) => (
-                  <ClientCard
-                    key={client.id}
-                    client={client}
-                    onClick={handleClientSelect}
-                  />
-                ))}
-              </div>
+              {/* Client Grid */}
+              {loading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="text-muted-foreground">Carregando clientes...</div>
+                </div>
+              ) : filteredClients.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {clients.length === 0 ? "Nenhum cliente cadastrado" : "Nenhum cliente encontrado"}
+                  </p>
+                  {clients.length === 0 && (
+                    <NewClientModal 
+                      trigger={
+                        <Button className="mt-4">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Criar primeiro cliente
+                        </Button>
+                      }
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredClients.map((client) => (
+                    <ClientCard
+                      key={client.id}
+                      client={client}
+                      onClick={handleClientSelect}
+                    />
+                  ))}
+                </div>
+              )}
             </Card>
           </div>
 

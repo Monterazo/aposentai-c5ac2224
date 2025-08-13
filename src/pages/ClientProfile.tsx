@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,30 +9,14 @@ import { RetirementSimulation } from "@/components/dashboard/RetirementSimulatio
 import { ReportGenerator } from "@/components/dashboard/ReportGenerator";
 import { INSSForms } from "@/components/dashboard/INSSForms";
 import { ProfileAnalysis } from "@/components/dashboard/ProfileAnalysis";
-import { ArrowLeft, FileText, Calculator, FileSpreadsheet, FormInput, TrendingUp, Users, Home, User, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, FileText, Calculator, FileSpreadsheet, FormInput, TrendingUp, Home, User, LayoutDashboard } from "lucide-react";
+import { useClientProfile } from "@/hooks/useClientProfile";
 
 const ClientProfile = () => {
   const { clientId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("documents");
-  const [clientData, setClientData] = useState<any>(null);
-
-  useEffect(() => {
-    // Mock loading client data - replace with actual API call
-    const mockClient = {
-      id: clientId,
-      name: "Cliente Novo",
-      cpf: "000.000.000-00",
-      email: "cliente@email.com",
-      phone: "(11) 99999-9999",
-      status: "new",
-      lastUpdate: new Date().toISOString().split('T')[0],
-      documentsCount: 0,
-      simulationsCount: 0,
-      reportsCount: 0
-    };
-    setClientData(mockClient);
-  }, [clientId]);
+  const { client, loading, error } = useClientProfile(clientId);
 
   const breadcrumbItems = [
     {
@@ -47,20 +31,37 @@ const ClientProfile = () => {
     },
     {
       href: `/client/${clientId}`,
-      label: clientData?.name || "Cliente",
+      label: client?.name || "Cliente",
       icon: User,
       current: true
     }
   ];
 
-  if (!clientData) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando dados do cliente...</p>
+      <AuthenticatedLayout breadcrumbItems={breadcrumbItems}>
+        <div className="min-h-[400px] flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Carregando dados do cliente...</p>
+          </div>
         </div>
-      </div>
+      </AuthenticatedLayout>
+    );
+  }
+
+  if (error || !client) {
+    return (
+      <AuthenticatedLayout breadcrumbItems={breadcrumbItems}>
+        <div className="min-h-[400px] flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">Cliente não encontrado</p>
+            <Button onClick={() => navigate('/dashboard')}>
+              Voltar ao Dashboard
+            </Button>
+          </div>
+        </div>
+      </AuthenticatedLayout>
     );
   }
 
@@ -87,26 +88,26 @@ const ClientProfile = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-foreground">Informações do Cliente</h2>
               <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                <span>CPF: {clientData.cpf}</span>
-                <span>Email: {clientData.email}</span>
-                {clientData.phone && <span>Tel: {clientData.phone}</span>}
+                <span>CPF: {client.cpf}</span>
+                <span>Email: {client.email || 'Não informado'}</span>
+                {client.phone && <span>Tel: {client.phone}</span>}
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="p-4 bg-muted/30">
                 <h3 className="font-medium text-foreground mb-2">Documentos</h3>
-                <p className="text-2xl font-bold text-primary">{clientData.documentsCount}</p>
+                <p className="text-2xl font-bold text-primary">{client.documentsCount || 0}</p>
                 <p className="text-sm text-muted-foreground">Arquivos enviados</p>
               </Card>
               <Card className="p-4 bg-muted/30">
                 <h3 className="font-medium text-foreground mb-2">Simulações</h3>
-                <p className="text-2xl font-bold text-primary">{clientData.simulationsCount}</p>
+                <p className="text-2xl font-bold text-primary">{client.simulationsCount || 0}</p>
                 <p className="text-sm text-muted-foreground">Regras analisadas</p>
               </Card>
               <Card className="p-4 bg-muted/30">
                 <h3 className="font-medium text-foreground mb-2">Relatórios</h3>
-                <p className="text-2xl font-bold text-primary">{clientData.reportsCount}</p>
+                <p className="text-2xl font-bold text-primary">{client.reportsCount || 0}</p>
                 <p className="text-sm text-muted-foreground">Gerados</p>
               </Card>
             </div>
