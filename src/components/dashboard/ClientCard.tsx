@@ -1,16 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Clock, CheckCircle, FileText, Trash2 } from "lucide-react";
+import { Clock, CheckCircle, FileText } from "lucide-react";
 import { validateCPF } from "@/lib/utils";
 import { Client } from "@/types/client";
 
 interface ClientCardProps {
   client: Client;
   onClick: (client: Client) => void;
-  onDelete?: (clientId: string) => void;
 }
 
 const statusConfig = {
@@ -26,17 +23,16 @@ const priorityConfig = {
   low: { label: "Baixa", color: "bg-green-500" }
 };
 
-export const ClientCard = ({ client, onClick, onDelete }: ClientCardProps) => {
+export const ClientCard = ({ client, onClick }: ClientCardProps) => {
   const status = statusConfig[client.status || 'new'];
   const priority = priorityConfig[client.priority || 'medium'];
   const StatusIcon = status.icon;
   
   return (
-    <div className="p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors relative">
-      <div 
-        className="cursor-pointer"
-        onClick={() => onClick(client)}
-      >
+    <div
+      className="p-4 border border-border rounded-lg hover:bg-muted/30 cursor-pointer transition-colors"
+      onClick={() => onClick(client)}
+    >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-3">
           <Avatar className="w-10 h-10">
@@ -68,41 +64,6 @@ export const ClientCard = ({ client, onClick, onDelete }: ClientCardProps) => {
         </div>
       </div>
       
-      {/* Botão de deletar - posicionado no canto superior direito */}
-      {onDelete && (
-        <div className="absolute top-2 right-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Tem certeza que deseja excluir o cliente "{client.name}"? Esta ação não pode ser desfeita.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => onDelete(client.id)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Excluir
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      )}
-      
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Progresso</span>
@@ -114,7 +75,6 @@ export const ClientCard = ({ client, onClick, onDelete }: ClientCardProps) => {
       <div className="flex justify-between items-center mt-3 text-sm text-muted-foreground">
         <span>{client.documentsCount || 0} documentos</span>
         <span>Atualizado em {client.lastUpdate || client.updated_at?.split('T')[0] || 'N/A'}</span>
-      </div>
       </div>
     </div>
   );
