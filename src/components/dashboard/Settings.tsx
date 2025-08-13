@@ -613,8 +613,6 @@ export const Settings = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pt-BR">Português (Brasil)</SelectItem>
-                    <SelectItem value="en-US">English (US)</SelectItem>
-                    <SelectItem value="es-ES">Español</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
