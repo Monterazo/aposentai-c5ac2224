@@ -39,9 +39,24 @@ All colors MUST be HSL.
     --input-border: 210 20% 85%;
     --input-focus: 195 57% 21%;
 
-    /* Interactive states */
-    --hover: 195 57% 25%;
+    /* Interactive states - Cores mais suaves para melhor contraste */
+    --hover: 195 57% 30%;
+    --hover-light: 195 57% 95%;
     --active: 210 40% 10%;
+
+    /* Progress bar colors - Melhor contraste */
+    --progress-bg: 210 20% 90%;
+    --progress-fill: 195 57% 45%;
+
+    /* Status badge colors - Suaves e com bom contraste */
+    --status-pending-bg: 195 57% 92%;
+    --status-pending-text: 195 57% 25%;
+    --status-analysis-bg: 45 90% 92%;
+    --status-analysis-text: 45 90% 25%;
+    --status-completed-bg: 120 50% 92%;
+    --status-completed-text: 120 50% 25%;
+    --status-new-bg: 210 15% 92%;
+    --status-new-text: 210 15% 25%;
 
     /* Professional gradients */
     --gradient-primary: linear-gradient(135deg, hsl(210 40% 13%), hsl(195 57% 21%));

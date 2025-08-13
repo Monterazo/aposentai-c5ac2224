@@ -9,10 +9,10 @@ import { useClients } from "@/hooks/useClients";
 import { useNavigate } from "react-router-dom";
 
 const statusConfig = {
-  analysis: { label: "Em Análise", color: "bg-yellow-100 text-yellow-800", icon: Clock },
-  pending: { label: "Pendente", color: "bg-blue-100 text-blue-800", icon: FileText },
-  completed: { label: "Concluído", color: "bg-green-100 text-green-800", icon: CheckCircle },
-  new: { label: "Novo", color: "bg-gray-100 text-gray-800", icon: Users }
+  analysis: { label: "Em Análise", color: "bg-[hsl(var(--status-analysis-bg))] text-[hsl(var(--status-analysis-text))]", icon: Clock },
+  pending: { label: "Pendente", color: "bg-[hsl(var(--status-pending-bg))] text-[hsl(var(--status-pending-text))]", icon: FileText },
+  completed: { label: "Concluído", color: "bg-[hsl(var(--status-completed-bg))] text-[hsl(var(--status-completed-text))]", icon: CheckCircle },
+  new: { label: "Novo", color: "bg-[hsl(var(--status-new-bg))] text-[hsl(var(--status-new-text))]", icon: Users }
 };
 
 export const ClientList = () => {

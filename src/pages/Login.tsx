@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { sanitizeInput, isValidEmail } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import lawyerHero from "@/assets/lawyer-hero.jpg";
@@ -161,6 +161,12 @@ const Login = () => {
               <button onClick={() => navigate("/auth/register")} className="text-primary font-medium hover:underline">
                 Registre-se
               </button>
+            </div>
+            <div className="pt-2">
+              <Link to="/" className="text-muted-foreground hover:text-primary inline-flex items-center text-sm">
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Voltar ao início
+              </Link>
             </div>
           </div>
 

@@ -144,11 +144,11 @@ export const GlobalSearch = ({ isVisible, onClose }: GlobalSearchProps) => {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case "client": return "bg-blue-100 text-blue-800";
-      case "document": return "bg-green-100 text-green-800";
-      case "simulation": return "bg-purple-100 text-purple-800";
-      case "action": return "bg-orange-100 text-orange-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "client": return "bg-[hsl(var(--status-pending-bg))] text-[hsl(var(--status-pending-text))]";
+      case "document": return "bg-[hsl(var(--status-completed-bg))] text-[hsl(var(--status-completed-text))]";
+      case "simulation": return "bg-purple-50 text-purple-700";
+      case "action": return "bg-orange-50 text-orange-700";
+      default: return "bg-[hsl(var(--status-new-bg))] text-[hsl(var(--status-new-text))]";
     }
   };
 
