@@ -309,7 +309,7 @@ export const Settings = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="gender">Gênero</Label>
-                <Select value={profileForm.gender} onValueChange={(value) => setProfileForm(prev => ({...prev, gender: value}))}>
+                <Select value={profileForm.gender} onValueChange={(value) => setProfileForm(prev => ({...prev, gender: value as "M" | "F" | "NB" | ""}))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o gênero" />
                   </SelectTrigger>
