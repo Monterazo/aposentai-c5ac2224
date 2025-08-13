@@ -33,14 +33,37 @@ const ResetPassword = () => {
   const passwordsMatch = password === confirmPassword && password.length > 0;
 
   useEffect(() => {
-    // Check if we have the required URL params for password reset
     const accessToken = searchParams.get('access_token');
     const refreshToken = searchParams.get('refresh_token');
+    const type = searchParams.get('type');
     
-    if (!accessToken || !refreshToken) {
-      toast.error("Link de redefinição inválido ou expirado");
-      navigate("/auth/login");
+    if (!accessToken || !refreshToken || type !== 'recovery') {
+      toast.error("Link de redefinição inválido ou expirado. Solicite um novo link.");
+      navigate("/auth/forgot-password");
+      return;
     }
+
+    // Set the session with the tokens from URL
+    const setSessionFromTokens = async () => {
+      try {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+
+        if (error) {
+          console.error('Session error:', error);
+          toast.error("Link de redefinição expirado. Solicite um novo link.");
+          navigate("/auth/forgot-password");
+        }
+      } catch (error) {
+        console.error('Session setup error:', error);
+        toast.error("Erro ao processar link de redefinição. Solicite um novo link.");
+        navigate("/auth/forgot-password");
+      }
+    };
+
+    setSessionFromTokens();
   }, [searchParams, navigate]);
 
   const handleResetPassword = async () => {
