@@ -20,15 +20,12 @@ export const useClientProfile = (clientId: string | undefined) => {
       setLoading(true);
       setError(null);
 
-      // Busca cliente específico das entidades do usuário
+      // Busca cliente específico do usuário diretamente
       const { data: clientData, error: clientError } = await supabase
         .from('clientes')
-        .select(`
-          *,
-          entidades!inner(owner_id)
-        `)
+        .select('*')
         .eq('id', clientId)
-        .eq('entidades.owner_id', user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (clientError) {

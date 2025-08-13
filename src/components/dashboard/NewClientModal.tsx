@@ -6,9 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useClients } from "@/hooks/useClients";
-import { useEntidade } from "@/hooks/useEntidade";
 import { toast } from "sonner";
-import { Users, Plus, Building } from "lucide-react";
+import { Users, Plus } from "lucide-react";
 
 interface NewClientModalProps {
   onClientCreated?: (client: any) => void;
@@ -20,7 +19,6 @@ export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { createClient } = useClients();
-  const { entidade, createEntidade } = useEntidade();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -35,12 +33,6 @@ export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps
   const handleSave = async () => {
     if (!formData.name || !formData.cpf || !formData.birthDate) {
       toast.error("Por favor, preencha os campos obrigatórios (Nome, CPF e Data de Nascimento).");
-      return;
-    }
-
-    // Verificar se existe entidade
-    if (!entidade) {
-      toast.error("Você precisa criar um perfil de entidade antes de cadastrar clientes.");
       return;
     }
 

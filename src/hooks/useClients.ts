@@ -20,14 +20,11 @@ export const useClients = () => {
       setLoading(true);
       setError(null);
 
-      // Busca clientes das entidades do usuário
+      // Busca clientes do usuário diretamente
       const { data: clientsData, error: clientsError } = await supabase
         .from('clientes')
-        .select(`
-          *,
-          entidades!inner(owner_id)
-        `)
-        .eq('entidades.owner_id', user.id)
+        .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (clientsError) {
@@ -91,20 +88,6 @@ export const useClients = () => {
     if (!user) return { success: false, error: 'Usuário não autenticado' };
 
     try {
-      // Primeiro verifica se o usuário tem uma entidade
-      const { data: entidades, error: entidadesError } = await supabase
-        .from('entidades')
-        .select('id')
-        .eq('owner_id', user.id)
-        .limit(1);
-
-      if (entidadesError) throw entidadesError;
-
-      if (!entidades || entidades.length === 0) {
-        toast.error('Você precisa ter uma entidade cadastrada para criar clientes');
-        return { success: false, error: 'Entidade não encontrada' };
-      }
-
       const { data, error } = await supabase
         .from('clientes')
         .insert([{
@@ -115,7 +98,7 @@ export const useClients = () => {
           endereco: clientData.endereco,
           rg: clientData.rg,
           data_nascimento: clientData.data_nascimento,
-          entidade_id: entidades[0].id
+          user_id: user.id
         }])
         .select()
         .single();

@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Plus, Home, Search } from "lucide-react";
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import { NewClientModal } from "@/components/dashboard/NewClientModal";
-import { NewEntidadeModal } from "@/components/dashboard/NewEntidadeModal";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { DashboardSummary } from "@/components/dashboard/DashboardSummary";
 import { ClientCard } from "@/components/dashboard/ClientCard";
@@ -17,7 +16,6 @@ import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import { useClients } from "@/hooks/useClients";
-import { useEntidade } from "@/hooks/useEntidade";
 import { Client } from "@/types/client";
 
 const Dashboard = () => {
@@ -27,7 +25,6 @@ const Dashboard = () => {
   const { showOnboarding, completeOnboarding, skipOnboarding } = useOnboarding();
   const { isSearchVisible, closeSearch } = useGlobalSearch();
   const { clients, loading } = useClients();
-  const { entidade } = useEntidade();
 
   const handleClientSelect = (client: Client) => {
     navigate(`/client/${client.id}`);
@@ -150,25 +147,14 @@ const Dashboard = () => {
                   </Button>
                 </div>
                 <div className="flex items-center space-x-4">
-                  {entidade ? (
-                    <NewClientModal 
-                      trigger={
-                        <Button size="sm">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Novo Cliente
-                        </Button>
-                      }
-                    />
-                  ) : (
-                    <NewEntidadeModal 
-                      trigger={
-                        <Button size="sm">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Criar Entidade
-                        </Button>
-                      }
-                    />
-                  )}
+                  <NewClientModal 
+                    trigger={
+                      <Button size="sm">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Novo Cliente
+                      </Button>
+                    }
+                  />
                 </div>
               </div>
 
@@ -180,23 +166,9 @@ const Dashboard = () => {
               ) : filteredClients.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">
-                    {!entidade 
-                      ? "Você precisa criar uma entidade antes de cadastrar clientes" 
-                      : clients.length === 0 
-                        ? "Nenhum cliente cadastrado" 
-                        : "Nenhum cliente encontrado"
-                    }
+                    {clients.length === 0 ? "Nenhum cliente cadastrado" : "Nenhum cliente encontrado"}
                   </p>
-                  {!entidade ? (
-                    <NewEntidadeModal 
-                      trigger={
-                        <Button>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Criar Entidade
-                        </Button>
-                      }
-                    />
-                  ) : clients.length === 0 && (
+                  {clients.length === 0 && (
                     <NewClientModal 
                       trigger={
                         <Button>
