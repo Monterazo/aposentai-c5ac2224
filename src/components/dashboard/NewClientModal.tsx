@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { Users, Plus } from "lucide-react";
+import { useClients } from "@/hooks/useClients";
+import { useEntidade } from "@/hooks/useEntidade";
+import { toast } from "sonner";
+import { Users, Plus, Building } from "lucide-react";
 
 interface NewClientModalProps {
   onClientCreated?: (client: any) => void;
@@ -15,9 +16,11 @@ interface NewClientModalProps {
 }
 
 export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps) => {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { createClient } = useClients();
+  const { entidade, createEntidade } = useEntidade();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -25,50 +28,56 @@ export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps
     cpf: "",
     birthDate: "",
     occupation: "",
-    notes: ""
+    endereco: "",
+    rg: ""
   });
 
-  const handleSave = () => {
-    if (!formData.name || !formData.email || !formData.cpf) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha os campos obrigatórios (Nome, Email e CPF).",
-        variant: "destructive",
-      });
+  const handleSave = async () => {
+    if (!formData.name || !formData.cpf || !formData.birthDate) {
+      toast.error("Por favor, preencha os campos obrigatórios (Nome, CPF e Data de Nascimento).");
       return;
     }
 
-    // Mock client creation - replace with actual implementation
-    const newClient = {
-      id: Date.now().toString(),
-      ...formData,
-      createdAt: new Date().toISOString(),
-      documentsCount: 0,
-      simulationsCount: 0,
-      reportsCount: 0
-    };
+    // Verificar se existe entidade
+    if (!entidade) {
+      toast.error("Você precisa criar um perfil de entidade antes de cadastrar clientes.");
+      return;
+    }
 
-    onClientCreated?.(newClient);
-    
-    toast({
-      title: "Cliente criado",
-      description: `${formData.name} foi adicionado com sucesso.`,
+    setIsLoading(true);
+
+    const result = await createClient({
+      name: formData.name,
+      cpf: formData.cpf,
+      email: formData.email,
+      phone: formData.phone,
+      data_nascimento: formData.birthDate,
+      endereco: formData.endereco,
+      rg: formData.rg
     });
 
-    // Reset form and close modal
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      cpf: "",
-      birthDate: "",
-      occupation: "",
-      notes: ""
-    });
-    setOpen(false);
+    if (result.success) {
+      // Reset form and close modal
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        cpf: "",
+        birthDate: "",
+        occupation: "",
+        endereco: "",
+        rg: ""
+      });
+      setOpen(false);
+      onClientCreated?.(result.data);
+      
+      // Navigate to the new client's dashboard
+      if (result.data) {
+        navigate(`/client/${result.data.id}`);
+      }
+    }
 
-    // Navigate to the new client's dashboard
-    navigate(`/client/${newClient.id}`);
+    setIsLoading(false);
   };
 
   const defaultTrigger = (
@@ -108,7 +117,7 @@ export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -145,7 +154,7 @@ export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="birthDate">Data de Nascimento</Label>
+                <Label htmlFor="birthDate">Data de Nascimento *</Label>
                 <Input
                   id="birthDate"
                   type="date"
@@ -155,12 +164,12 @@ export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps
                 />
               </div>
               <div>
-                <Label htmlFor="occupation">Profissão</Label>
+                <Label htmlFor="rg">RG</Label>
                 <Input
-                  id="occupation"
-                  value={formData.occupation}
-                  onChange={(e) => setFormData(prev => ({ ...prev, occupation: e.target.value }))}
-                  placeholder="Ex: Engenheiro, Professor, etc."
+                  id="rg"
+                  value={formData.rg}
+                  onChange={(e) => setFormData(prev => ({ ...prev, rg: e.target.value }))}
+                  placeholder="00.000.000-0"
                   className="mt-1"
                 />
               </div>
@@ -172,12 +181,12 @@ export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps
             <h3 className="text-lg font-semibold text-foreground">Informações Adicionais</h3>
             
             <div>
-              <Label htmlFor="notes">Observações</Label>
+              <Label htmlFor="endereco">Endereço</Label>
               <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Observações importantes sobre o cliente..."
+                id="endereco"
+                value={formData.endereco}
+                onChange={(e) => setFormData(prev => ({ ...prev, endereco: e.target.value }))}
+                placeholder="Endereço completo do cliente..."
                 className="mt-1"
                 rows={3}
               />
@@ -186,11 +195,11 @@ export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3 pt-6 border-t">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
-              Criar Cliente
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading ? "Criando..." : "Criar Cliente"}
             </Button>
           </div>
         </div>

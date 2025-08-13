@@ -87,7 +87,7 @@ export const useClients = () => {
     }
   };
 
-  const createClient = async (clientData: Omit<Client, 'id' | 'created_at' | 'updated_at'>) => {
+  const createClient = async (clientData: Omit<Client, 'id' | 'created_at' | 'updated_at' | 'entidade_id' | 'documentsCount' | 'progress' | 'status' | 'priority' | 'lastUpdate' | 'simulationsCount' | 'reportsCount'>) => {
     if (!user) return { success: false, error: 'Usuário não autenticado' };
 
     try {
