@@ -142,7 +142,9 @@ export const NewClientModal = ({ onClientCreated, trigger }: NewClientModalProps
                   value={formData.cpf}
                   onChange={(e) => {
                     const numbersOnly = e.target.value.replace(/\D/g, '');
-                    setFormData(prev => ({ ...prev, cpf: numbersOnly }));
+                    if (numbersOnly.length <= 11) {
+                      setFormData(prev => ({ ...prev, cpf: numbersOnly }));
+                    }
                   }}
                   placeholder="00000000000"
                   className="mt-1"
